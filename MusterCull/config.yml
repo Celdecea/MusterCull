@@ -1,0 +1,149 @@
+#
+# MusterCull
+# Bukkit plug-in default configuration file.
+#
+
+
+# Limits for mobs and how to handle them.
+#
+# There are four requirements for each record in this list:
+#  
+#	type:	The name of the entity to manage culling for. These are taken from Bukkit's
+#			EntityType enumeration and are case sensitive (so use upper-case).
+#
+#	limit:  The hard number of mobs of this type to limit in a certain area. If this is
+#			zero or less, all mobs are culled.
+#	
+#	culling:	The method to use for culling the mob. Currently only two methods exist,
+#				SPAWN and CLUSTER (CLUSTER is not working yet):
+#
+#					SPAWN		Prevents mobs from spawning using a Bukkit event listener.
+#
+#					CLUSTER		Searches for mob clusters and begins applying damage to
+#								random mobs above the limit count.
+#
+#	range:	The distance from the mob to check. If this value is zero or less, no checking
+#			is performed and cycles are wasted, so comment out unused limits from this file.
+#
+#
+#limits:
+#- type: CREEPER
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: SKELETON
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: SPIDER
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: ZOMBIE
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: SLIME
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: GHAST
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: PIG_ZOMBIE
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: ENDERMAN
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: CAVE_SPIDER
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: SILVERFISH
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: BLAZE
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: MAGMA_CUBE
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: ENDER_DRAGON
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: PIG
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: SHEEP
+#  limit: 6
+#  culling: SPAWN
+#  range: 0
+#- type: COW
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: CHICKEN
+#  limit: 12
+#  culling: SPAWN
+#  range: 0
+#- type: SQUID
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: WOLF
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: MUSHROOM_COW
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: SNOWMAN
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: OCELOT
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: IRON_GOLEM
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+#- type: VILLAGER
+#  limit: 0
+#  culling: SPAWN
+#  range: 0
+
+
+
+
+
+# The amount of damage to apply to mobs which are considered crowded under the
+# CLUSTER method of culling.
+damage: 2
+
+# Zones for the CLUSTER method of culling. Each zone is a rectangle using chunk
+# coordinates. The engine only works one zone at a time, gathering mob counts
+# and looking for saturated areas. If one is found, mobs above the saturation
+# count begin randomly taking damage (so ultimately all mobs).
+#
+# You cannot use infinite values here, nor is the Minecraft world effectively
+# infinite. The maximum useful range is less than +- 1,000,000 chunks.
+#
+zones:
+- left: -1000
+  top: -1000
+  right: 1000
+  bottom: 1000
+
+
