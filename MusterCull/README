@@ -1,0 +1,36 @@
+
+MusterCull v1.0 - A Bukkit plugin and a better Minecraft mob limiter.
+
+By Celdecea
+Found at https://github.com/Celdecea/MusterCull
+
+
+WORKING STUFF:
+
+The first mode of operation is called SPAWN. Mobs are limited by number and
+range at the point of spawn. If a mob is about to spawn in an area with more
+than the configured limit for that type the spawn is canceled. The range to
+check is configurable as well.
+
+
+IN PROGRESS STUFF:
+
+The second mode of operation, called CLUSTER, involves detecting saturated
+areas and dealing with the overpopulation of mobs.
+
+As mobs are added or loaded, the engine will check to see if they are about
+to spawn in a saturated area. If so, the engine will randomly pick nearby
+equivalent mobs to start damaging. A mob being damaged will continue to be
+damaged until dead or levels drop back to normal. Furthermore, the mob will
+look for another over-populated mob to begin damaging (up to a limit).
+
+Players can either quickly move animals out of the area, use potions, or
+manually cull their animals to stop the damage.
+
+
+PLANNED STUFF:
+
+Commands to do some of this stuff live and manipulate the configs and some
+way to configure notifications.
+
+ 
