@@ -51,7 +51,7 @@
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: PIG_ZOMBIE
+#- type: PIGZOMBIE
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
@@ -59,7 +59,7 @@
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: CAVE_SPIDER
+#- type: CAVESPIDER
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
@@ -71,11 +71,11 @@
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: MAGMA_CUBE
+#- type: LAVASLIME
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: ENDER_DRAGON
+#- type: ENDERDRAGON
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
@@ -103,7 +103,7 @@
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: MUSHROOM_COW
+#- type: MUSHROOMCOW
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
@@ -111,11 +111,11 @@
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: OCELOT
+#- type: OZELOT
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-#- type: IRON_GOLEM
+#- type: VILLAGERGOLEM
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
@@ -123,9 +123,6 @@
 #  limit: 0
 #  culling: SPAWN
 #  range: 0
-
-
-
 
 
 # The amount of damage to apply to mobs which are considered crowded under the
@@ -146,4 +143,9 @@ zones:
   right: 1000
   bottom: 1000
 
+
+# Enable if you want a notification on standard output when this plug-in
+# does anything.
+#
+notify: false
 

@@ -1,5 +1,5 @@
 
-MusterCull v1.0 - A Bukkit plugin and a better Minecraft mob limiter.
+MusterCull v1.0 - A Bukkit plugin and Minecraft mob limiter.
 
 By Celdecea
 Found at https://github.com/Celdecea/MusterCull
@@ -12,11 +12,55 @@ range at the point of spawn. If a mob is about to spawn in an area with more
 than the configured limit for that type the spawn is canceled. The range to
 check is configurable as well.
 
+CONFIGURING:
+
+Put the jar in plugins and create MusterCull/config.yml
+
+Add the following (you don't need START and END lines):
+#-- START -------------------------------------
+#limits:
+CREEPER
+#  limit: 20
+#  culling: SPAWN
+#  range: 100
+#-- END ---------------------------------------
+
+Copy the four lines under limits: for each mob you want to cull. Remove the # from
+the beginning of each line, including limits:.
+
+The fields are:
+
+type:	The name of the entity to manage culling for. These are taken from Bukkit's
+		EntityType enumeration and are case sensitive (so use upper-case):
+		
+			CREEPER			SKELETON		SPIDER
+			ZOMBIE			SLIME			GHAST
+			PIGZOMBIE		ENDERMAN		CAVESPIDER
+			SILVERFISH		BLAZE			LAVASLIME
+			ENDERDRAGON		PIG				SHEEP
+			COW				CHICKEN			SQUID
+			WOLF			MUSHROOMCOW		SNOWMAN
+			OZELOT			VILLAGERGOLEM	VILLAGER
+
+limit:  The hard number of mobs of this type to limit in a certain area. If this is
+		zero or less, all mobs are culled.
+
+culling:	The method to use for culling the mob. Currently only two methods exist,
+			SPAWN and DAMAGE.
+
+				SPAWN		Prevents mobs from spawning using a Bukkit event listener.
+
+				DAMAGE		Chunks with too many mobs of a certain type begin dealing
+							damage to random mobs.
+
+range:	The distance from the mob to check. If this value is zero or less, no checking
+		is performed and cycles are wasted, so comment out unused limits from this file.
+
 
 IN PROGRESS STUFF:
 
 The second mode of operation, called CLUSTER, involves detecting saturated
-areas and dealing with the overpopulation of mobs.
+areas and dealing with the over population of mobs.
 
 As mobs are added or loaded, the engine will check to see if they are about
 to spawn in a saturated area. If so, the engine will randomly pick nearby

@@ -12,9 +12,9 @@ enum CullType {
 	SPAWN,
 	
 	/**
-	 * Uses clustering to find mobs to damage.
+	 * Uses damage on mobs in crowded chunks.
 	 */
-	CLUSTER;
+	DAMAGE;
 	
 	/**
 	 * Returns a CullType representing the name provided.
@@ -22,6 +22,12 @@ enum CullType {
 	 * @return The CullType representing the name provided.
 	 */
 	public static CullType fromName(String name) {
+		
+		if (name == null) {
+			return null;
+		}
+		
+		name = name.trim();
 		
 		for (CullType culling : values()) {
 			if (0 == name.compareTo(culling.name())) {

@@ -34,11 +34,18 @@ public class Configuration {
 	private Map<EntityType, ConfigurationLimit> mobLimits = new HashMap<EntityType, ConfigurationLimit>();
 	
 	/**
+	 * Whether or not notification is enabled to send output messages from this plug-in.
+	 */
+	private boolean notification = false;
+	
+	
+	/**
 	 * Constructor which really has nothing to do.
 	 */
 	Configuration() {
 		// Nothing to do here.
 	}
+	
 	
 	
 	/**
@@ -47,13 +54,13 @@ public class Configuration {
 	 */
 	public void load(JavaPlugin plugin) {
 		
+		System.out.println("Loading MusterCull Configuration...");
+		
 		plugin.reloadConfig();
-        
 		FileConfiguration config = plugin.getConfig();
-        
-		config.options().copyDefaults(true);
-        
+		
 		this.setDamage(config.getInt("damage"));
+		this.setNotification(0 == config.getString("notify").compareTo("on"));
 		
 		List<?> list;
 		
@@ -83,13 +90,35 @@ public class Configuration {
 		if (list != null) {
 			for (Object obj : list ) {
 	
+				if (obj == null) {
+					System.err.println("Possible bad limit in configuration file.");
+					continue;
+				}
+				
 				//TODO: Figure out how to do this without suppression.
 	            @SuppressWarnings("unchecked")
 	            LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>) obj;
 	            
-	            ConfigurationLimit limit = new ConfigurationLimit((Integer)map.get("limit"), CullType.fromName(map.get("culling").toString()), (Integer)map.get("range"));
+	            EntityType type = EntityType.fromName(map.get("type").toString().trim());
+
+	            if (type == null) {
+            		System.err.println("Uncrecognized type '" + map.get("type").toString() + "' in configuration file.");
+					continue;
+	            }
+
+	            int limit = (Integer)map.get("limit");
 	            
-	            setLimit(EntityType.fromName((String)map.get("type")), limit);
+	            CullType culling = CullType.fromName(map.get("culling").toString());
+
+	            if (culling == null) {
+            		System.err.println("Uncrecognized culling '" + map.get("culling").toString() + "' in configuration file.");
+					continue;
+	            }
+	            
+	            int range = (Integer)map.get("range");
+	            
+	            
+	            setLimit(type, new ConfigurationLimit(limit, culling, range));
 	        }
 		}
 		
@@ -109,6 +138,13 @@ public class Configuration {
 		FileConfiguration config = plugin.getConfig();
 		
 		config.set("damage", this.damage);
+		
+		if (this.notification) {
+			config.set("notify", "on");
+		}
+		else {
+			config.set("notify", "off");
+		}
 		
 		plugin.saveConfig();
 		
@@ -167,5 +203,23 @@ public class Configuration {
 	 */
 	public ConfigurationLimit getLimit(EntityType type) {
 		return mobLimits.get(type);
+	}
+
+
+	/**
+	 * Sets whether notification is enabled for this plug-in.
+	 * @param notification Whether notification is enabled for this plug-in.
+	 */
+	public void setNotification(boolean notification) {
+		this.notification = notification;
+		this.dirty = true;
+	}
+
+	/**
+	 * Returns whether notification is enabled for this plug-in.
+	 * @return Whether notification is enabled for this plug-in.
+	 */
+	public boolean getNotification() {
+		return notification;
 	}
 }
