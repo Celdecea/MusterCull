@@ -52,7 +52,13 @@ public class Configuration {
 	/**
 	 * Number of ticks between calls to the chunk damage laborer. 
 	 */
-	private long ticksBetweenChunkDamage = 300L;
+	private long ticksBetweenChunkDamage = 20L;
+	
+	
+	/**
+	 * Percent chance that a mob will be damaged when crowded.
+	 */
+	private int damageChance = 60;
 	
 	
 	/**
@@ -274,6 +280,17 @@ public class Configuration {
 	public long getTicksBetweenChunkDamage() {
 		return ticksBetweenChunkDamage;
 	}
+
+
+
+	/**
+	 * Returns the percent chance that a mob will be damaged when crowded.
+	 * @return Percent chance that a mob will be damaged when crowded.
+	 */
+	public int getDamageChance() {
+		return damageChance;
+	}
+
 
 
 	

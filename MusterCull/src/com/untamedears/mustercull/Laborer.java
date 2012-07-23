@@ -1,15 +1,8 @@
 package com.untamedears.mustercull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 
-import org.bukkit.Chunk;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 
 /**
@@ -36,61 +29,55 @@ public class Laborer implements Runnable {
 	
 	/**
 	 * Repeating damage method for the class.
-	 * 
-	 * Each time this method is called it is expected to find a specific
-	 * mob in a specific chunk and damage it. While doing this it should
-	 * check to see if we should stop damaging that particular chunk.
 	 */
 	@Override
 	public void run() {
 		
-		Chunk chunk = this.pluginInstance.getNextChunk();
+		Entity entity = this.pluginInstance.getNextEntity();
 		
-		if (chunk == null) {
+		if (entity == null) {
 			// Nothing to do
 			return;
 		}
-			
+	
+		ConfigurationLimit limit = this.pluginInstance.getLimit(entity);
 		
-		Map<EntityType, Integer> entityCounts = new HashMap<EntityType, Integer>();
-		Map<EntityType, List<Entity>> entityTable = new HashMap<EntityType, List<Entity>>(); 
+		if (limit == null) {
+			// Still nothing to do
+			return;
+		}
 		
-		for (Entity entity : chunk.getEntities()) {
-			Integer count =	entityCounts.get(entity.getType());
+		if (limit.culling == CullType.DAMAGE) {
 			
-			if (count == null) {
-				entityCounts.put(entity.getType(), 1);
-				
-				List<Entity> list = new ArrayList<Entity>();
-				list.add(entity);
-				
-				entityTable.put(entity.getType(), list);
+			if (limit.range <= 0) {
+				return;
 			}
-			else {
-				entityCounts.put(entity.getType(), count + 1);
-				
-				List<Entity> list = entityTable.get(entity.getType());
-				list.add(entity);
-				
-				entityTable.put(entity.getType(), list);
-			}
-        }
-		
-		
-		Random random = new Random();
-		
-		for (Entry<EntityType, Integer> entry : entityCounts.entrySet()) {
-			
-			ConfigurationLimit limit = this.pluginInstance.getLimit(entry.getKey());
 
-			if (limit != null && limit.culling == CullType.DAMAGE) {
-				if (limit.limit <= entry.getValue()) {
-				
-					List<Entity> list = entityTable.get(entry.getKey());
-					Entity entity = list.get(random.nextInt(list.size()));
+			LivingEntity livingEntity = (LivingEntity)entity;
+			Random random = new Random();
+			
+			// If the limit is 0, damage it 
+			if (limit.limit <= 0) {
+				if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
+					livingEntity.damage(this.pluginInstance.getDamage());
+				}
+				return;
+			}
+			
+			// Loop through entities in range and count similar entities.
+			int count = 0;
+			
+			for (Entity otherEntity : entity.getNearbyEntities(limit.range, limit.range, limit.range)) {
+				if (0 == otherEntity.getType().compareTo(entity.getType())) {
+					count += 1;
 					
-					final LivingEntity livingEntity = (LivingEntity)entity;
-					livingEntity.damage(pluginInstance.getDamage());
+					// If we've reached a limit for this entity, go ahead and damage it.
+					if (count >= limit.limit) {
+						if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
+							livingEntity.damage(this.pluginInstance.getDamage());
+						}
+						return;
+					}
 				}
 			}
 		}

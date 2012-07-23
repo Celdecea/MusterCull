@@ -1,15 +1,10 @@
 package com.untamedears.mustercull;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import org.bukkit.Chunk;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -20,19 +15,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class MusterCull extends JavaPlugin {
 
 	/**
-	 * Holds a list of chunks to damage with specific Bukkit EntityTypes.
+	 * Holds a list of entities to monitor.
 	 */
-	private List<Chunk> chunksToDamage = new ArrayList<Chunk>();
+	private List<Entity> knownEntities = new ArrayList<Entity>();
+	
+	/**
+	 * Holds an iterator for round-robin access to the entities to monitor.
+	 */
+	private int currentEntity = 0;
 	
 	/**
 	 * Buffer for keeping track of the parallel Laborer task.
 	 */
 	private int laborTask = -1;
-	
-	/**
-	 * Buffer for holding a list of entities to damage from the thread.
-	 */
-	private Set<UUID> damageableEntities = new HashSet<UUID>();
 	
 	/**
 	 * Buffer for holding configuration information for this plug-in.
@@ -45,12 +40,24 @@ public class MusterCull extends JavaPlugin {
 	public void onEnable() {
 		this.config.load(this);
         
+		
 		if (this.config.hasDamageLimits()) {
+			
+			for (World world : getServer().getWorlds()) {
+				for (Entity entity : world.getEntities()) {
+					ConfigurationLimit limit = this.config.getLimit(entity.getType());
+					
+					if (limit != null && limit.culling == CullType.DAMAGE) { 
+						addEntity(entity);
+					}
+				}
+			}
+			
 			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenChunkDamage(), this.config.getTicksBetweenChunkDamage());
 
 			if (this.laborTask == -1) {
 				getLogger().severe("Failed to start MusterCull laborer.");
-			}
+			}	
 		}
 		
 		if (this.config.hasSpawnLimits() || this.config.hasDamageLimits()) {
@@ -76,28 +83,6 @@ public class MusterCull extends JavaPlugin {
     
     
     
-    /**
-     * Called by the listeners to potentially add entities to the handler.
-     * @param entity A reference to the Bukkit entity to test for inclusion.
-     */
-    public void notifyEntity(Entity entity) {
-    	
-    	if (entity.isDead()) {
-    		return;
-    	}
-    	
-    	if (!entity.getType().isAlive()) {
-    		return;
-    	}
-    	
-    	UUID uuid = entity.getUniqueId();
-    	
-    	if (damageableEntities.contains(uuid)) {
-    		damageableEntities.remove(uuid);
-    		((LivingEntity)entity).damage(this.config.getDamage());
-    		return;
-    	}    	
-    }
     
     
 
@@ -162,34 +147,54 @@ public class MusterCull extends JavaPlugin {
 	
 	
 	/**
-	 * Adds a chunk to the list for damage monitoring.
-	 * @param chunk A reference to a Bukkit Chunk to monitor for mob damage.
+	 * Adds an entity to the list for damage monitoring.
+	 * @param entity A reference to a Bukkit Entity to monitor for mob damage.
 	 */
-	public void addChunk(Chunk chunk) {
+	public void addEntity(Entity entity) {
 		if (this.config.hasDamageLimits()) {
-			if (!this.chunksToDamage.contains(chunk)) {
-				this.chunksToDamage.add(chunk);
+			if (!this.knownEntities.contains(entity)) {
+				this.knownEntities.add(entity);
 			}
 		}
 	}
 	
 	/**
-	 * Removes a chunk from the list for damage monitoring.
-	 * @param chunk A reference to a Bukkit Chunk to no longer monitor for mob damage.
+	 * Removes an entity from the list for damage monitoring.
+	 * @param chunk A reference to a Bukkit Entity to no longer monitor for mob damage.
 	 */
-	public void removeChunk(Chunk chunk) {
+	public void removeEntity(Entity entity) {
 		if (this.config.hasDamageLimits()) {
-			this.chunksToDamage.remove(chunk);
+			this.knownEntities.remove(entity);
 		}	
 	}
 	
 	
 	/**
-	 * Returns the next chunk for damaging.
-	 * @return A reference to a Bukkit Chunk to damage.
+	 * Returns the next entity for monitoring.
+	 * @return A reference to a Bukkit Entity to check.
 	 */
-	public Chunk getNextChunk() {
+	public Entity getNextEntity() {
 		
-		return null;
+		int totalEntities = this.knownEntities.size();
+		
+		if (++this.currentEntity > totalEntities) {
+			this.currentEntity = 1;
+		
+			if (totalEntities == 0) {
+				return null;
+			}
+		}
+		
+		return this.knownEntities.get(this.currentEntity - 1);
 	}
+	
+	
+	/**
+	 * Returns the percent chance that a mob will be damaged when crowded.
+	 * @return Percent chance that a mob will be damaged when crowded.
+	 */
+	public int getDamageChance() {
+		return this.config.getDamageChance();
+	}
+
 }

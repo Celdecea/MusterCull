@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 
 /**
  * This class provides event handlers for game entities.
@@ -34,6 +35,9 @@ public class EntityListener extends Listener {
 		if (limit == null) {
 			return;
 		}
+		else if (limit.culling == CullType.DAMAGE) {
+			this.getPluginInstance().addEntity(entity);
+		}
 		else if (limit.culling == CullType.SPAWN) {
 			 
 			if (limit.range <= 0) {
@@ -62,11 +66,17 @@ public class EntityListener extends Listener {
 					}
 				}
 			}
-			
 		}
 	}
 	
-	
+	/**
+	 * This handler is called when an entity has been removed.
+	 * @param event
+	 */
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onEntityDeath(EntityDeathEvent event) {
+		this.getPluginInstance().removeEntity(event.getEntity());
+	}
 	
 	
 	/**
