@@ -1,11 +1,9 @@
 package com.untamedears.mustercull;
 
-import org.bukkit.Chunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 
 /**
  * This class provides event handlers for game entities.
@@ -66,67 +64,7 @@ public class EntityListener extends Listener {
 			}
 			
 		}
-		else if (limit.culling == CullType.DAMAGE) {
-			
-			Chunk chunk = entity.getWorld().getChunkAt(entity.getLocation());
-			int count = 0;
-			
-			for (Entity otherEntity : chunk.getEntities()) {
-				if (0 == otherEntity.getType().compareTo(entity.getType())) {
-					count += 1;
-					
-					if (count >= limit.limit) {
-						this.getPluginInstance().startDamagingChunk(chunk, entity.getType());
-						return;
-					}
-				}
-	        }
-			
-			this.getPluginInstance().stopDamagingChunk(chunk, entity.getType());
-		}
 	}
-	
-	
-	
-	/**
-	 * Event called when an entity is killed.
-	 * @param event A reference to the associated event.
-	 */
-	@EventHandler(priority = EventPriority.HIGH)
-	public void	onEntityDeath (EntityDeathEvent event) {
-		
-		// Grab a configured limit for event entity
-		Entity entity = event.getEntity();
-		ConfigurationLimit limit = this.getPluginInstance().getLimit(entity);
-		
-		if (limit == null) {
-			return;
-		}
-		else if (limit.culling == CullType.DAMAGE) {
-			
-			Chunk chunk = entity.getWorld().getChunkAt(entity.getLocation());
-			int count = 0;
-			
-			for (Entity otherEntity : chunk.getEntities()) {
-				if (0 == otherEntity.getType().compareTo(entity.getType())) {
-					count += 1;
-					
-					if (count >= limit.limit) {
-						this.getPluginInstance().startDamagingChunk(chunk, entity.getType());
-						return;
-					}
-				}
-	        }
-			
-			this.getPluginInstance().stopDamagingChunk(chunk, entity.getType());
-		}
-		
-	}
-	
-	
-	
-	
-	
 	
 	
 	

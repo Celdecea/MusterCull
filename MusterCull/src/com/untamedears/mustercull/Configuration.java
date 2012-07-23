@@ -36,7 +36,23 @@ public class Configuration {
 	/**
 	 * Whether or not notification is enabled to send output messages from this plug-in.
 	 */
-	private boolean notification = false;
+	private boolean notificationEnabled = false;
+	
+	/**
+	 * Whether or not we have limits with CullType DAMAGE.
+	 */
+	private boolean hasDamageLimits = false;
+	
+	/**
+	 * Whether or not we have limits with CullType SPAWN.
+	 */
+	private boolean hasSpawnLimits = false;
+	
+	
+	/**
+	 * Number of ticks between calls to the chunk damage laborer. 
+	 */
+	private long ticksBetweenChunkDamage = 300L;
 	
 	
 	/**
@@ -54,13 +70,11 @@ public class Configuration {
 	 */
 	public void load(JavaPlugin plugin) {
 		
-		System.out.println("Loading MusterCull Configuration...");
-		
 		plugin.reloadConfig();
 		FileConfiguration config = plugin.getConfig();
 		
 		this.setDamage(config.getInt("damage"));
-		this.setNotification(0 == config.getString("notify").compareTo("on"));
+		this.setNotificationEnabled(0 == config.getString("notify").compareTo("true"));
 		
 		List<?> list;
 		
@@ -139,11 +153,11 @@ public class Configuration {
 		
 		config.set("damage", this.damage);
 		
-		if (this.notification) {
-			config.set("notify", "on");
+		if (this.notificationEnabled) {
+			config.set("notify", "true");
 		}
 		else {
-			config.set("notify", "off");
+			config.set("notify", "false");
 		}
 		
 		plugin.saveConfig();
@@ -191,6 +205,15 @@ public class Configuration {
 	 * @param limit The limit for the entity type.
 	 */
 	public void setLimit(EntityType type, ConfigurationLimit limit) {
+		
+		if (limit.culling == CullType.DAMAGE){
+			this.hasDamageLimits = true;
+		}
+		
+		if (limit.culling == CullType.SPAWN) {
+			this.hasSpawnLimits = true;
+		}
+		
 		mobLimits.put(type, limit);
 		System.out.println("Culling " + type.toString() + " using " + limit.culling.toString() + " with a limit of " + limit.limit + " and a range of " + limit.range);
 		this.dirty = true;
@@ -210,8 +233,8 @@ public class Configuration {
 	 * Sets whether notification is enabled for this plug-in.
 	 * @param notification Whether notification is enabled for this plug-in.
 	 */
-	public void setNotification(boolean notification) {
-		this.notification = notification;
+	public void setNotificationEnabled(boolean notificationEnabled) {
+		this.notificationEnabled = notificationEnabled;
 		this.dirty = true;
 	}
 
@@ -219,7 +242,39 @@ public class Configuration {
 	 * Returns whether notification is enabled for this plug-in.
 	 * @return Whether notification is enabled for this plug-in.
 	 */
-	public boolean getNotification() {
-		return notification;
+	public boolean getNotificationEnabled() {
+		return notificationEnabled;
 	}
+
+
+
+	/**
+	 * Returns whether or not we have limits with CullType SPAWN.
+	 * @return Whether or not we have limits with CullType SPAWN.
+	 */
+	public boolean hasSpawnLimits() {
+		return hasSpawnLimits;
+	}
+
+
+	/**
+	 * Returns whether or not we have limits with CullType DAMAGE.
+	 * @return Whether or not we have limits with CullType DAMAGE.
+	 */
+	public boolean hasDamageLimits() {
+		return hasDamageLimits;
+	}
+
+
+
+	/**
+	 * Returns the number of ticks between calls to the chunk damage laborer.
+	 * @return Number of ticks between calls to the chunk damage laborer.
+	 */
+	public long getTicksBetweenChunkDamage() {
+		return ticksBetweenChunkDamage;
+	}
+
+
+	
 }

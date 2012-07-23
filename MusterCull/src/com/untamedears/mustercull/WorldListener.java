@@ -4,11 +4,6 @@ package com.untamedears.mustercull;
 //import org.bukkit.Chunk;
 //import org.bukkit.entity.Entity;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -38,35 +33,7 @@ public class WorldListener extends Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOW)
 	public void onChunkLoad(ChunkLoadEvent event) {
-		
-		Map<EntityType, Integer> entityCounts = new HashMap<EntityType, Integer>();
-		
-		for (Entity entity : event.getChunk().getEntities()) {
-			Integer count =	entityCounts.get(entity.getType());
-			
-			if (count == null) {
-				entityCounts.put(entity.getType(), 1);
-			}
-			else {
-				entityCounts.put(entity.getType(), count + 1);
-			}
-        }
-		
-		
-		for (Map.Entry<EntityType, Integer> entry : entityCounts.entrySet()) {
-			
-			ConfigurationLimit limit = this.getPluginInstance().getLimit(entry.getKey());
-
-			if (limit != null && limit.culling == CullType.DAMAGE) {
-				if (limit.limit <= entry.getValue()) {
-					this.getPluginInstance().startDamagingChunk(event.getChunk(), entry.getKey());
-				}
-				else {
-					this.getPluginInstance().stopDamagingChunk(event.getChunk(), entry.getKey());
-				}
-				
-			}
-		}
+		this.getPluginInstance().addChunk(event.getChunk());
 	}
 	
 	
@@ -77,7 +44,7 @@ public class WorldListener extends Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOW)
 	public void onChunkUnload(ChunkUnloadEvent event) {
-		this.getPluginInstance().stopDamagingChunk(event.getChunk());
+		this.getPluginInstance().removeChunk(event.getChunk());
 	}
 	
 }

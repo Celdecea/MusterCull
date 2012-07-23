@@ -1,6 +1,8 @@
 package com.untamedears.mustercull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,9 +20,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class MusterCull extends JavaPlugin {
 
 	/**
+	 * Holds a list of chunks to damage with specific Bukkit EntityTypes.
+	 */
+	private List<Chunk> chunksToDamage = new ArrayList<Chunk>();
+	
+	/**
 	 * Buffer for keeping track of the parallel Laborer task.
 	 */
-	private int laborTask;
+	private int laborTask = -1;
 	
 	/**
 	 * Buffer for holding a list of entities to damage from the thread.
@@ -38,13 +45,21 @@ public class MusterCull extends JavaPlugin {
 	public void onEnable() {
 		this.config.load(this);
         
-		this.laborTask = getServer().getScheduler().scheduleAsyncDelayedTask(this, new Laborer());
-		
-		if (this.laborTask == -1) {
-			getLogger().severe("Failed to start MusterCull laborer.");
+		if (this.config.hasDamageLimits()) {
+			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenChunkDamage(), this.config.getTicksBetweenChunkDamage());
+
+			if (this.laborTask == -1) {
+				getLogger().severe("Failed to start MusterCull laborer.");
+			}
 		}
-				
-		getServer().getPluginManager().registerEvents(new EntityListener(this), this);
+		
+		if (this.config.hasSpawnLimits() || this.config.hasDamageLimits()) {
+			getServer().getPluginManager().registerEvents(new EntityListener(this), this);
+		}
+		else {
+			getLogger().info("MusterCull doesn't appear to have anything to do.");
+		}
+		
     }
      
 	/**
@@ -112,39 +127,69 @@ public class MusterCull extends JavaPlugin {
 	 * @return Whether notification is enabled for this plug-in.
 	 */
 	public boolean canNotify() {
-		return this.config.getNotification();
+		return this.config.getNotificationEnabled();
 	}
     
 	
+	/**
+	 * Returns whether or not we have limits with CullType DAMAGE.
+	 * @return Whether or not we have limits with CullType DAMAGE.
+	 */
+	public boolean hasDamageLimits() {
+		return this.config.hasDamageLimits();
+	}
 	
 	
 	/**
-	 * Used by listeners to inform the plugin that a crowded chunk exists.
-	 * @param chunk A reference to a Bukkit chunk which is crowded.
-	 * @param type The Bukkit EntityType which is crowding this chunk.
+	 * Returns whether or not we have limits with CullType SPAWN.
+	 * @return Whether or not we have limits with CullType SPAWN.
 	 */
-	public void startDamagingChunk(Chunk chunk, EntityType type) {
-		System.out.println("MusterCull wants to damage " + type.getName() + " mobs in chunk " + chunk.getX() + "," + chunk.getZ());
+	public boolean hasSpawnLimits() {
+		return this.config.hasSpawnLimits();
 	}
-
-	/**
-	 * Used by listeners to inform the plugin that a chunk is much better now.
-	 * @param chunk A reference to a Bukkit chunk which is no longer crowded.
-	 * @param type The Bukkit EntityType which is not crowding this chunk anymore.
-	 */
-	public void stopDamagingChunk(Chunk chunk, EntityType type) {
-		System.out.println("MusterCull is finished damaging " + type.getName() + " mobs in chunk " + chunk.getX() + "," + chunk.getZ());
-	}
+	
+	
+	
 	
 	/**
-	 * Used by listeners to inform the plugin that a chunk has unloaded.
-	 * @param chunk A reference to a Bukkit chunk which is unloaded.
+	 * Returns the amount of damage to apply to a crowded mob.
+	 * @return The amount of damage to apply to a crowded mob. 
 	 */
-	public void stopDamagingChunk(Chunk chunk) {
-		System.out.println("MusterCull is unloading chunk " + chunk.getX() + "," + chunk.getZ());
+	public int getDamage() {
+		return this.config.getDamage();
 	}
-
 	
 	
 	
+	/**
+	 * Adds a chunk to the list for damage monitoring.
+	 * @param chunk A reference to a Bukkit Chunk to monitor for mob damage.
+	 */
+	public void addChunk(Chunk chunk) {
+		if (this.config.hasDamageLimits()) {
+			if (!this.chunksToDamage.contains(chunk)) {
+				this.chunksToDamage.add(chunk);
+			}
+		}
+	}
+	
+	/**
+	 * Removes a chunk from the list for damage monitoring.
+	 * @param chunk A reference to a Bukkit Chunk to no longer monitor for mob damage.
+	 */
+	public void removeChunk(Chunk chunk) {
+		if (this.config.hasDamageLimits()) {
+			this.chunksToDamage.remove(chunk);
+		}	
+	}
+	
+	
+	/**
+	 * Returns the next chunk for damaging.
+	 * @return A reference to a Bukkit Chunk to damage.
+	 */
+	public Chunk getNextChunk() {
+		
+		return null;
+	}
 }
