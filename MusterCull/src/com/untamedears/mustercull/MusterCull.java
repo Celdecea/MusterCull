@@ -32,13 +32,15 @@ public class MusterCull extends JavaPlugin {
 	/**
 	 * Buffer for holding configuration information for this plug-in.
 	 */
-	private Configuration config = new Configuration();
+	private Configuration config = null;
 	
 	/**
 	 * Called when the plug-in is enabled by Bukkit.
 	 */
 	public void onEnable() {
-		this.config.load(this);
+		
+		this.config = new Configuration(this);
+		this.config.load();
         
 		
 		if (this.config.hasDamageLimits()) {
@@ -53,7 +55,7 @@ public class MusterCull extends JavaPlugin {
 				}
 			}
 			
-			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenChunkDamage(), this.config.getTicksBetweenChunkDamage());
+			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenDamage(), this.config.getTicksBetweenDamage());
 
 			if (this.laborTask == -1) {
 				getLogger().severe("Failed to start MusterCull laborer.");
@@ -77,7 +79,7 @@ public class MusterCull extends JavaPlugin {
     		getServer().getScheduler().cancelTask(this.laborTask);
     	}
     	
-    	this.config.save(this);
+    	this.config.save();
     }
 
     
@@ -164,7 +166,9 @@ public class MusterCull extends JavaPlugin {
 	 */
 	public void removeEntity(Entity entity) {
 		if (this.config.hasDamageLimits()) {
-			this.knownEntities.remove(entity);
+			if (this.knownEntities.remove(entity)) {
+				this.currentEntity--;
+			}
 		}	
 	}
 	
@@ -175,17 +179,16 @@ public class MusterCull extends JavaPlugin {
 	 */
 	public Entity getNextEntity() {
 		
-		int totalEntities = this.knownEntities.size();
+		if (--this.currentEntity < 0) {
+			this.currentEntity = this.knownEntities.size() - 1;
 		
-		if (++this.currentEntity > totalEntities) {
-			this.currentEntity = 1;
-		
-			if (totalEntities == 0) {
+			if (this.currentEntity < 0) {
 				return null;
 			}
 		}
 		
-		return this.knownEntities.get(this.currentEntity - 1);
+		System.out.println("Returning entity " + this.currentEntity);
+		return this.knownEntities.get(this.currentEntity);
 	}
 	
 	

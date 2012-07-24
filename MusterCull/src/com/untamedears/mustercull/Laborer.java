@@ -47,37 +47,30 @@ public class Laborer implements Runnable {
 			return;
 		}
 		
-		if (limit.culling == CullType.DAMAGE) {
+		if (limit.culling != CullType.DAMAGE) {
+			return;
+		}
 			
-			if (limit.range <= 0) {
-				return;
-			}
+		if (limit.range <= 0) {
+			return;
+		}
 
-			LivingEntity livingEntity = (LivingEntity)entity;
-			Random random = new Random();
-			
-			// If the limit is 0, damage it 
-			if (limit.limit <= 0) {
-				if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
-					livingEntity.damage(this.pluginInstance.getDamage());
-				}
-				return;
-			}
-			
-			// Loop through entities in range and count similar entities.
-			int count = 0;
-			
-			for (Entity otherEntity : entity.getNearbyEntities(limit.range, limit.range, limit.range)) {
-				if (0 == otherEntity.getType().compareTo(entity.getType())) {
-					count += 1;
-					
-					// If we've reached a limit for this entity, go ahead and damage it.
-					if (count >= limit.limit) {
-						if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
-							livingEntity.damage(this.pluginInstance.getDamage());
-						}
-						return;
+		LivingEntity livingEntity = (LivingEntity)entity;
+		Random random = new Random();
+		
+		// Loop through entities in range and count similar entities.
+		int count = 0;
+		
+		for (Entity otherEntity : entity.getNearbyEntities(limit.range, limit.range, limit.range)) {
+			if (0 == otherEntity.getType().compareTo(entity.getType())) {
+				count += 1;
+				
+				// If we've reached a limit for this entity, go ahead and damage it.
+				if (count >= limit.limit) {
+					if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
+						livingEntity.damage(this.pluginInstance.getDamage());
 					}
+					return;
 				}
 			}
 		}

@@ -29,7 +29,7 @@ public class Configuration {
 	private int damage = 0;
 	
 	/**
-	 * Mob limits per chunk
+	 * Mob limits loaded from the configuration file.
 	 */
 	private Map<EntityType, ConfigurationLimit> mobLimits = new HashMap<EntityType, ConfigurationLimit>();
 	
@@ -52,7 +52,7 @@ public class Configuration {
 	/**
 	 * Number of ticks between calls to the chunk damage laborer. 
 	 */
-	private long ticksBetweenChunkDamage = 20L;
+	private long ticksBetweenDamage = 40L;
 	
 	
 	/**
@@ -62,10 +62,17 @@ public class Configuration {
 	
 	
 	/**
-	 * Constructor which really has nothing to do.
+	 * Holds a reference to the Bukkit JavaPlugin for this project 
 	 */
-	Configuration() {
-		// Nothing to do here.
+	private JavaPlugin pluginInstance = null;
+	
+
+	/**
+	 * Constructor which stores a reference to the Bukkit JavaPlugin we are using.
+	 * @param plugin A reference to a Bukkit JavaPlugin.
+	 */
+	Configuration(JavaPlugin plugin) {
+		this.pluginInstance = plugin; 
 	}
 	
 	
@@ -74,36 +81,19 @@ public class Configuration {
 	 * Loads configuration values from the supplied plug-in instance.
 	 * @param plugin A reference to the Bukkit plug-in to load from.
 	 */
-	public void load(JavaPlugin plugin) {
+	public void load() {
 		
-		plugin.reloadConfig();
-		FileConfiguration config = plugin.getConfig();
+		this.pluginInstance.reloadConfig();
+		FileConfiguration config = this.pluginInstance.getConfig();
 		
 		this.setDamage(config.getInt("damage"));
 		this.setNotificationEnabled(0 == config.getString("notify").compareTo("true"));
+		this.setDamageChance(config.getInt("damage_chance"));
+		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
+		
+		
 		
 		List<?> list;
-		
-		
-		list = config.getList("zones");
-		
-		if (list != null) {
-			
-			for (Object obj : list) {
-				
-				if (obj == null) {
-					System.err.println("Possible bad zone in configuration file.");
-					continue;
-				}
-				
-				//TODO: Figure out how to do this without suppression.
-	            @SuppressWarnings("unchecked")
-				LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>) obj;
-	            
-	            addZone((Integer)map.get("left"), (Integer)map.get("top"), (Integer)map.get("right"), (Integer)map.get("bottom"));
-	        }
-		}
-		
 				
 		list = config.getList("limits");
 		
@@ -149,15 +139,18 @@ public class Configuration {
 	 * Saves configuration values to the supplied plug-in instance.
 	 * @param plugin  A reference to the Bukkit plug-in to save to.
 	 */
-	public void save(JavaPlugin plugin) {
+	public void save() {
 		
 		if (!this.dirty) {
 			return;
 		}
 		
-		FileConfiguration config = plugin.getConfig();
+		FileConfiguration config = this.pluginInstance.getConfig();
 		
 		config.set("damage", this.damage);
+		config.set("damage_chance", this.damageChance);
+		config.set("ticks_between_damage", this.ticksBetweenDamage);
+		
 		
 		if (this.notificationEnabled) {
 			config.set("notify", "true");
@@ -166,7 +159,7 @@ public class Configuration {
 			config.set("notify", "false");
 		}
 		
-		plugin.saveConfig();
+		this.pluginInstance.saveConfig();
 		
 		this.dirty = false;
 	}
@@ -192,18 +185,6 @@ public class Configuration {
 	
 	
 	/**
-	 * Adds a zone to the configuration for checking.
-	 * @param left Smaller x chunk coordinate of the zone.
-	 * @param top Smaller z chunk coordinate of the zone.
-	 * @param right Larger x chunk coordinate of the zone.
-	 * @param bottom Larger z chunk coordinate of the zone.
-	 */
-	public void addZone(int left, int top, int right, int bottom) {
-		
-		this.dirty = true;
-	}
-	
-	/**
 	 * Sets the ConfigurationLimit for the specified mob type. Don't add 
 	 * limits you don't need.
 	 * 
@@ -221,8 +202,9 @@ public class Configuration {
 		}
 		
 		mobLimits.put(type, limit);
-		System.out.println("Culling " + type.toString() + " using " + limit.culling.toString() + " with a limit of " + limit.limit + " and a range of " + limit.range);
 		this.dirty = true;
+
+		this.pluginInstance.getLogger().info("Culling " + type.toString() + " using " + limit.culling.toString() + "; limit=" + limit.limit + " range=" + limit.range);
 	}
 	
 	/**
@@ -274,11 +256,21 @@ public class Configuration {
 
 
 	/**
-	 * Returns the number of ticks between calls to the chunk damage laborer.
-	 * @return Number of ticks between calls to the chunk damage laborer.
+	 * Returns the number of ticks between calls to the damage laborer.
+	 * @return Number of ticks between calls to the damage laborer.
 	 */
-	public long getTicksBetweenChunkDamage() {
-		return ticksBetweenChunkDamage;
+	public long getTicksBetweenDamage() {
+		return ticksBetweenDamage;
+	}
+	
+	/**
+	 * Sets the number of ticks between calls to the damage laborer.
+	 * @param ticksBetweenDamage Number of ticks between calls to the damage laborer.
+	 */
+	public void setTicksBetweenDamage(long ticksBetweenDamage) {
+		this.pluginInstance.getLogger().info("MusterCull will damage something every " + ticksBetweenDamage + " ticks.");
+		this.ticksBetweenDamage = ticksBetweenDamage;
+		this.dirty = true;
 	}
 
 
@@ -289,6 +281,15 @@ public class Configuration {
 	 */
 	public int getDamageChance() {
 		return damageChance;
+	}
+	
+	/**
+	 * Sets the percent chance that a mob will be damaged when crowded.
+	 * @param damageChange Percent chance that a mob will be damaged when crowded.
+	 */
+	public void setDamageChance(int damageChance) {
+		this.damageChance = damageChance;
+		this.dirty = true;
 	}
 
 
