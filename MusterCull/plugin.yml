@@ -4,6 +4,18 @@
 #
 name: MusterCull
 main: com.untamedears.mustercull.MusterCull
-version: 0.1
+version: 1.0
 description: Removes persistent mobs due to overcrowding.
 author: Celdecea
+commands:
+  mustercull:
+    description: Accesses the MusterCull plug-in.
+    aliases: [mcull]
+    permission: mustercull.*
+    usage: |
+      /<command>
+      
+permissions:
+  mustercull.*:
+    description: Allows access to all MusterCull commands
+    default: op

@@ -59,6 +59,11 @@ public class MusterCull extends JavaPlugin {
 			getLogger().info("MusterCull doesn't appear to have anything to do.");
 		}
 		
+		Commander commander = new Commander(this);
+		
+		for (String command : getDescription().getCommands().keySet()) {
+			getCommand(command).setExecutor(commander);
+		}
     }
      
 	/**

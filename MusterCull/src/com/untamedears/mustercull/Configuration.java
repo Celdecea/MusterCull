@@ -83,7 +83,6 @@ public class Configuration {
 	 */
 	public void load() {
 		
-		this.pluginInstance.reloadConfig();
 		FileConfiguration config = this.pluginInstance.getConfig();
 		
 		this.setDamage(config.getInt("damage"));
