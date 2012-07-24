@@ -45,16 +45,6 @@ public class MusterCull extends JavaPlugin {
 		
 		if (this.config.hasDamageLimits()) {
 			
-			for (World world : getServer().getWorlds()) {
-				for (Entity entity : world.getEntities()) {
-					ConfigurationLimit limit = this.config.getLimit(entity.getType());
-					
-					if (limit != null && limit.culling == CullType.DAMAGE) { 
-						addEntity(entity);
-					}
-				}
-			}
-			
 			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenDamage(), this.config.getTicksBetweenDamage());
 
 			if (this.laborTask == -1) {
@@ -165,11 +155,16 @@ public class MusterCull extends JavaPlugin {
 	 * @param chunk A reference to a Bukkit Entity to no longer monitor for mob damage.
 	 */
 	public void removeEntity(Entity entity) {
-		if (this.config.hasDamageLimits()) {
+		
+		int index = this.knownEntities.indexOf(entity);
+		
+		if (index >= 0) {
 			if (this.knownEntities.remove(entity)) {
-				this.currentEntity--;
+				if (index < this.currentEntity) { 
+					this.currentEntity--;
+				}
 			}
-		}	
+		}
 	}
 	
 	
@@ -180,14 +175,25 @@ public class MusterCull extends JavaPlugin {
 	public Entity getNextEntity() {
 		
 		if (--this.currentEntity < 0) {
-			this.currentEntity = this.knownEntities.size() - 1;
-		
-			if (this.currentEntity < 0) {
-				return null;
+			
+			this.knownEntities.clear();
+			
+			for (World world : getServer().getWorlds()) {
+				for (Entity entity : world.getEntities()) {
+					ConfigurationLimit limit = this.config.getLimit(entity.getType());
+					
+					if (limit != null && limit.culling == CullType.DAMAGE) { 
+						this.knownEntities.add(entity);
+					}
+				}
 			}
+			
+			this.currentEntity = this.knownEntities.size();
+			
+			getLogger().info("Damaging up to " + this.currentEntity + " entities this round.");
+			return null;
 		}
 		
-		System.out.println("Returning entity " + this.currentEntity);
 		return this.knownEntities.get(this.currentEntity);
 	}
 	

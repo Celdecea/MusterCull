@@ -2,6 +2,7 @@ package com.untamedears.mustercull;
 
 import java.util.Random;
 
+import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -39,6 +40,10 @@ public class Laborer implements Runnable {
 			// Nothing to do
 			return;
 		}
+		
+		if (entity.isDead()) {
+			return;
+		}
 	
 		ConfigurationLimit limit = this.pluginInstance.getLimit(entity);
 		
@@ -55,7 +60,6 @@ public class Laborer implements Runnable {
 			return;
 		}
 
-		LivingEntity livingEntity = (LivingEntity)entity;
 		Random random = new Random();
 		
 		// Loop through entities in range and count similar entities.
@@ -63,13 +67,29 @@ public class Laborer implements Runnable {
 		
 		for (Entity otherEntity : entity.getNearbyEntities(limit.range, limit.range, limit.range)) {
 			if (0 == otherEntity.getType().compareTo(entity.getType())) {
+				
 				count += 1;
 				
 				// If we've reached a limit for this entity, go ahead and damage it.
 				if (count >= limit.limit) {
+					
 					if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
-						livingEntity.damage(this.pluginInstance.getDamage());
+						if (Ageable.class.isAssignableFrom(entity.getClass())) {
+							Ageable agingEntity = (Ageable)entity;
+							
+							if (agingEntity.isAdult()) {
+								agingEntity.damage(this.pluginInstance.getDamage());
+							}
+							else {
+								agingEntity.damage(2 * this.pluginInstance.getDamage());
+							}
+						}
+						else if (LivingEntity.class.isAssignableFrom(entity.getClass())) {
+							LivingEntity livingEntity = (LivingEntity)entity;
+							livingEntity.damage(this.pluginInstance.getDamage());
+						}
 					}
+					
 					return;
 				}
 			}

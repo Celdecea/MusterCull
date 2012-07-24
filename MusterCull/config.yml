@@ -110,7 +110,7 @@ damage: 2
 damage_chance: 60
 
 # The number of ticks between invocations of the damage method for mobs.
-ticks_between_damage: 40L;
+ticks_between_damage: 20
 
 
 # Enable if you want a notification on standard output when this plug-in
