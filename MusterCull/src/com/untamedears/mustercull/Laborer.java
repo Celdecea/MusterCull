@@ -34,7 +34,13 @@ public class Laborer implements Runnable {
 	@Override
 	public void run() {
 		
-		Entity entity = this.pluginInstance.getNextEntity();
+		EntityLimitPair entityLimitPair = this.pluginInstance.getNextEntity();
+		
+		if (entityLimitPair == null) {
+			return;
+		}
+		
+		Entity entity = entityLimitPair.getEntity();
 		
 		if (entity == null) {
 			// Nothing to do
@@ -45,7 +51,11 @@ public class Laborer implements Runnable {
 			return;
 		}
 	
-		ConfigurationLimit limit = this.pluginInstance.getLimit(entity);
+		if (entity.isDead()) {
+			// Still nothing to do
+		}
+		
+		ConfigurationLimit limit = entityLimitPair.getLimit();
 		
 		if (limit == null) {
 			// Still nothing to do

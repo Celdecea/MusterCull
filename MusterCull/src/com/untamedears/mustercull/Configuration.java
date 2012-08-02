@@ -86,11 +86,9 @@ public class Configuration {
 		FileConfiguration config = this.pluginInstance.getConfig();
 		
 		this.setDamage(config.getInt("damage"));
-		this.setNotificationEnabled(0 == config.getString("notify").compareTo("true"));
+		this.setNotificationEnabled(config.getBoolean("notify"));
 		this.setDamageChance(config.getInt("damage_chance"));
 		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
-		
-		
 		
 		List<?> list;
 				
@@ -149,14 +147,8 @@ public class Configuration {
 		config.set("damage", this.damage);
 		config.set("damage_chance", this.damageChance);
 		config.set("ticks_between_damage", this.ticksBetweenDamage);
+		config.set("notify", this.notificationEnabled);
 		
-		
-		if (this.notificationEnabled) {
-			config.set("notify", "true");
-		}
-		else {
-			config.set("notify", "false");
-		}
 		
 		this.pluginInstance.saveConfig();
 		

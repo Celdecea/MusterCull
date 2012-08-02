@@ -1,7 +1,7 @@
 package com.untamedears.mustercull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
+
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -17,12 +17,7 @@ public class MusterCull extends JavaPlugin {
 	/**
 	 * Holds a list of entities to monitor.
 	 */
-	private List<Entity> knownEntities = new ArrayList<Entity>();
-	
-	/**
-	 * Holds an iterator for round-robin access to the entities to monitor.
-	 */
-	private int currentEntity = 0;
+	private Stack<EntityLimitPair> knownEntities = new Stack<EntityLimitPair>();
 	
 	/**
 	 * Buffer for keeping track of the parallel Laborer task.
@@ -147,59 +142,38 @@ public class MusterCull extends JavaPlugin {
 	 * Adds an entity to the list for damage monitoring.
 	 * @param entity A reference to a Bukkit Entity to monitor for mob damage.
 	 */
-	public void addEntity(Entity entity) {
+	public void addEntityLimitPair(EntityLimitPair entityLimitPair) {
 		if (this.config.hasDamageLimits()) {
-			if (!this.knownEntities.contains(entity)) {
-				this.knownEntities.add(entity);
-			}
+			this.knownEntities.push(entityLimitPair);
 		}
 	}
-	
-	/**
-	 * Removes an entity from the list for damage monitoring.
-	 * @param chunk A reference to a Bukkit Entity to no longer monitor for mob damage.
-	 */
-	public void removeEntity(Entity entity) {
-		
-		int index = this.knownEntities.indexOf(entity);
-		
-		if (index >= 0) {
-			if (this.knownEntities.remove(entity)) {
-				if (index < this.currentEntity) { 
-					this.currentEntity--;
-				}
-			}
-		}
-	}
-	
 	
 	/**
 	 * Returns the next entity for monitoring.
-	 * @return A reference to a Bukkit Entity to check.
+	 * @return A reference to an EntityLimitPair.
 	 */
-	public Entity getNextEntity() {
+	public EntityLimitPair getNextEntity() {
 		
-		if (--this.currentEntity < 0) {
-			
-			this.knownEntities.clear();
+		if (this.knownEntities.empty()) {
 			
 			for (World world : getServer().getWorlds()) {
 				for (Entity entity : world.getEntities()) {
 					ConfigurationLimit limit = this.config.getLimit(entity.getType());
 					
 					if (limit != null && limit.culling == CullType.DAMAGE) { 
-						this.knownEntities.add(entity);
+						addEntityLimitPair(new EntityLimitPair(entity, limit));
 					}
 				}
 			}
 			
-			this.currentEntity = this.knownEntities.size();
-			
-			getLogger().info("Damaging up to " + this.currentEntity + " entities this round.");
+			getLogger().info("Grabbed " + this.knownEntities.size() + " entities this round.");
 			return null;
 		}
+
+		EntityLimitPair entityLimitPair = this.knownEntities.pop(); 
 		
-		return this.knownEntities.get(this.currentEntity);
+		System.out.println("Returning entity " + entityLimitPair.getEntity().getEntityId());
+		return entityLimitPair;
 	}
 	
 	

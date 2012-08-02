@@ -4,7 +4,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 
 /**
  * This class provides event handlers for game entities.
@@ -35,9 +34,6 @@ public class EntityListener extends Listener {
 		if (limit == null) {
 			return;
 		}
-		else if (limit.culling == CullType.DAMAGE) {
-			this.getPluginInstance().addEntity(entity);
-		}
 		else if (limit.culling == CullType.SPAWN) {
 			 
 			if (limit.range <= 0) {
@@ -46,7 +42,6 @@ public class EntityListener extends Listener {
 			 
 			// If the limit is 0, prevent all of this entity type from spawning 
 			if (limit.limit <= 0) {
-				notifyRemoval(entity);
 				event.setCancelled(true);
 				return;
 			}
@@ -60,7 +55,6 @@ public class EntityListener extends Listener {
 					
 					// If we've reached a limit for this entity, prevent it from spawning.
 					if (count >= limit.limit) {
-						notifyRemoval(entity);
 						event.setCancelled(true);
 						return;
 					}
@@ -69,23 +63,4 @@ public class EntityListener extends Listener {
 		}
 	}
 	
-	/**
-	 * This handler is called when an entity has been removed.
-	 * @param event A reference to the associated Bukkit event.
-	 */
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true)
-	public void onEntityDeath(EntityDeathEvent event) {
-		this.getPluginInstance().removeEntity(event.getEntity());
-	}
-	
-	
-	/**
-	 * Displays a notification method when a mob is removed if enabled.
-	 * @param entity A reference to the Bukkit entity where status information is coming from.
-	 */
-	public void notifyRemoval(Entity entity) {
-		if (this.getPluginInstance().canNotify()) {
-			System.out.println("Removing " + entity.getType().toString() + " from the world near " + entity.getLocation().toString());
-		}
-	}
 }
