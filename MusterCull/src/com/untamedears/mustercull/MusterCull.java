@@ -37,7 +37,6 @@ public class MusterCull extends JavaPlugin {
 		this.config = new Configuration(this);
 		this.config.load();
         
-		
 		if (this.config.hasDamageLimits()) {
 			
 			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenDamage(), this.config.getTicksBetweenDamage());
@@ -96,16 +95,20 @@ public class MusterCull extends JavaPlugin {
     public ConfigurationLimit getLimit(EntityType entityType) {
     	return this.config.getLimit(entityType);
     }
-    
-    
-    
-    /**
-	 * Returns whether notification is enabled for this plug-in.
-	 * @return Whether notification is enabled for this plug-in.
+
+
+	/**
+	 * Sets the ConfigurationLimit for the specified mob type. Don't add 
+	 * limits you don't need.
+	 * 
+	 * @param type The type of entity to set a ConfigurationLimit for.
+	 * @param limit The limit for the entity type.
 	 */
-	public boolean canNotify() {
-		return this.config.getNotificationEnabled();
+	public void setLimit(EntityType type, ConfigurationLimit limit) {
+		this.config.setLimit(type, limit);
 	}
+	
+    
     
 	
 	/**
@@ -160,7 +163,7 @@ public class MusterCull extends JavaPlugin {
 				for (Entity entity : world.getEntities()) {
 					ConfigurationLimit limit = this.config.getLimit(entity.getType());
 					
-					if (limit != null && limit.culling == CullType.DAMAGE) { 
+					if (limit != null && limit.getCulling() == CullType.DAMAGE) { 
 						addEntityLimitPair(new EntityLimitPair(entity, limit));
 					}
 				}
@@ -171,8 +174,6 @@ public class MusterCull extends JavaPlugin {
 		}
 
 		EntityLimitPair entityLimitPair = this.knownEntities.pop(); 
-		
-		System.out.println("Returning entity " + entityLimitPair.getEntity().getEntityId());
 		return entityLimitPair;
 	}
 	
@@ -184,5 +185,18 @@ public class MusterCull extends JavaPlugin {
 	public int getDamageChance() {
 		return this.config.getDamageChance();
 	}
+	
+	
+	
+	
+
+	/**
+	 * Returns the number of entities left to check for damage in this round.
+	 * @return The size of the stack of Bukkit entities left to check.
+	 */
+	public int getRemainingDamageEntities() {
+		return this.knownEntities.size();
+	}
+
 
 }

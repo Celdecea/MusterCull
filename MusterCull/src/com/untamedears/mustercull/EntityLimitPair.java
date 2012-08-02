@@ -40,7 +40,13 @@ public class EntityLimitPair {
 	 * @param entity A reference to a Bukkit entity to set.
 	 */
 	public void setEntity(Entity entity) {
+		
+		if (entity == null) {
+			throw new IllegalArgumentException("Entity must not be null.");
+		}
+		
 		this.entity = entity;
+		this.dirty = true;
 	}
 
 	/**
@@ -56,7 +62,13 @@ public class EntityLimitPair {
 	 * @param limit A reference to a ConfigurationLimit object.
 	 */
 	public void setLimit(ConfigurationLimit limit) {
+
+		if (limit == null) {
+			throw new IllegalArgumentException("Limit must not be null.");
+		}
+
 		this.limit = limit;
+		this.dirty = true;
 	}
 
 	/**

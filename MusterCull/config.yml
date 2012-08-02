@@ -103,17 +103,12 @@
 
 # The amount of damage to apply to mobs which are considered crowded under the
 # DAMAGE method of culling.
-damage: 2
+damage: 6
 
 # The percent chance that a mob will be damaged if crowded under the DAMAGE
 # method of culling.
-damage_chance: 60
+damage_chance: 75
 
 # The number of ticks between invocations of the damage method for mobs.
-ticks_between_damage: 20
-
-
-# Enable if you want a notification on standard output when this plug-in
-# does anything (useful really for debug only).
-notify: false
+ticks_between_damage: 10
 

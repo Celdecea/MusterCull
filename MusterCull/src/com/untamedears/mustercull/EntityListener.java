@@ -34,14 +34,11 @@ public class EntityListener extends Listener {
 		if (limit == null) {
 			return;
 		}
-		else if (limit.culling == CullType.SPAWN) {
-			 
-			if (limit.range <= 0) {
-				return;
-			}
+		
+		if (limit.getCulling() == CullType.SPAWN) {
 			 
 			// If the limit is 0, prevent all of this entity type from spawning 
-			if (limit.limit <= 0) {
+			if (limit.getLimit() <= 0) {
 				event.setCancelled(true);
 				return;
 			}
@@ -49,18 +46,24 @@ public class EntityListener extends Listener {
 			// Loop through entities in range and count similar entities.
 			int count = 0;
 			
-			for (Entity otherEntity : entity.getNearbyEntities(limit.range, limit.range, limit.range)) {
+			for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange(), limit.getRange())) {
 				if (0 == otherEntity.getType().compareTo(entity.getType())) {
 					count += 1;
 					
 					// If we've reached a limit for this entity, prevent it from spawning.
-					if (count >= limit.limit) {
+					if (count >= limit.getLimit()) {
 						event.setCancelled(true);
 						return;
 					}
 				}
 			}
 		}
+		
+		
+		if (limit.getCulling() == CullType.DAMAGE) {
+			getPluginInstance().addEntityLimitPair(new EntityLimitPair(entity, limit));
+		}
+		
 	}
-	
+
 }

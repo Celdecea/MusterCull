@@ -30,7 +30,7 @@ enum CullType {
 		name = name.trim();
 		
 		for (CullType culling : values()) {
-			if (0 == name.compareTo(culling.name())) {
+			if (0 == name.compareToIgnoreCase(culling.name())) {
 				return culling;
 			}
 		}

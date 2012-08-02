@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,11 +33,6 @@ public class Configuration {
 	private Map<EntityType, ConfigurationLimit> mobLimits = new HashMap<EntityType, ConfigurationLimit>();
 	
 	/**
-	 * Whether or not notification is enabled to send output messages from this plug-in.
-	 */
-	private boolean notificationEnabled = false;
-	
-	/**
 	 * Whether or not we have limits with CullType DAMAGE.
 	 */
 	private boolean hasDamageLimits = false;
@@ -52,13 +46,13 @@ public class Configuration {
 	/**
 	 * Number of ticks between calls to the chunk damage laborer. 
 	 */
-	private long ticksBetweenDamage = 40L;
+	private long ticksBetweenDamage = 20L;
 	
 	
 	/**
 	 * Percent chance that a mob will be damaged when crowded.
 	 */
-	private int damageChance = 60;
+	private int damageChance = 75;
 	
 	
 	/**
@@ -86,7 +80,6 @@ public class Configuration {
 		FileConfiguration config = this.pluginInstance.getConfig();
 		
 		this.setDamage(config.getInt("damage"));
-		this.setNotificationEnabled(config.getBoolean("notify"));
 		this.setDamageChance(config.getInt("damage_chance"));
 		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
 		
@@ -109,7 +102,7 @@ public class Configuration {
 	            EntityType type = EntityType.fromName(map.get("type").toString().trim());
 
 	            if (type == null) {
-            		System.err.println("Uncrecognized type '" + map.get("type").toString() + "' in configuration file.");
+            		System.err.println("Unrecognized type '" + map.get("type").toString() + "' in configuration file.");
 					continue;
 	            }
 
@@ -118,7 +111,7 @@ public class Configuration {
 	            CullType culling = CullType.fromName(map.get("culling").toString());
 
 	            if (culling == null) {
-            		System.err.println("Uncrecognized culling '" + map.get("culling").toString() + "' in configuration file.");
+            		System.err.println("Unrecognized culling '" + map.get("culling").toString() + "' in configuration file.");
 					continue;
 	            }
 	            
@@ -147,9 +140,7 @@ public class Configuration {
 		config.set("damage", this.damage);
 		config.set("damage_chance", this.damageChance);
 		config.set("ticks_between_damage", this.ticksBetweenDamage);
-		config.set("notify", this.notificationEnabled);
-		
-		
+				
 		this.pluginInstance.saveConfig();
 		
 		this.dirty = false;
@@ -184,18 +175,18 @@ public class Configuration {
 	 */
 	public void setLimit(EntityType type, ConfigurationLimit limit) {
 		
-		if (limit.culling == CullType.DAMAGE){
+		if (limit.getCulling() == CullType.DAMAGE){
 			this.hasDamageLimits = true;
 		}
 		
-		if (limit.culling == CullType.SPAWN) {
+		if (limit.getCulling() == CullType.SPAWN) {
 			this.hasSpawnLimits = true;
 		}
 		
 		mobLimits.put(type, limit);
 		this.dirty = true;
 
-		this.pluginInstance.getLogger().info("Culling " + type.toString() + " using " + limit.culling.toString() + "; limit=" + limit.limit + " range=" + limit.range);
+		this.pluginInstance.getLogger().info("Culling " + type.toString() + " using " + limit.getCulling().toString() + "; limit=" + limit.getLimit() + " range=" + limit.getRange());
 	}
 	
 	/**
@@ -207,23 +198,6 @@ public class Configuration {
 		return mobLimits.get(type);
 	}
 
-
-	/**
-	 * Sets whether notification is enabled for this plug-in.
-	 * @param notification Whether notification is enabled for this plug-in.
-	 */
-	public void setNotificationEnabled(boolean notificationEnabled) {
-		this.notificationEnabled = notificationEnabled;
-		this.dirty = true;
-	}
-
-	/**
-	 * Returns whether notification is enabled for this plug-in.
-	 * @return Whether notification is enabled for this plug-in.
-	 */
-	public boolean getNotificationEnabled() {
-		return notificationEnabled;
-	}
 
 
 
@@ -282,7 +256,6 @@ public class Configuration {
 		this.damageChance = damageChance;
 		this.dirty = true;
 	}
-
 
 
 	

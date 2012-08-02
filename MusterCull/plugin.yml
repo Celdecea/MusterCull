@@ -8,13 +8,31 @@ version: 1.0
 description: Removes persistent mobs due to overcrowding.
 author: Celdecea
 commands:
-  mustercull:
-    description: Accesses the MusterCull plug-in.
-    aliases: [mcull]
+  mcullstatus:
+    description: Shows runtime status for the MusterCull plugin.
+    aliases: [mustercullstatus]
+    permission: mustercull.*
+    usage: /mcullstatus
+  mculllimit:
+    description: Modifies the limit table.
+    aliases: [musterculllimit]
     permission: mustercull.*
     usage: |
-      /<command>
-      
+      /mculllimit LIMITTYPE ENTITYTYPE LIMIT RANGE
+      Where:
+      * LIMITTYPE is either SPAWN or DAMAGE.
+      * ENTITYTYPE is the Bukkit EntityType to modify.
+      * LIMIT is the number of entities allowed for this limit
+      ** TIP: use /mcullentities for a list.
+      * RANGE is the effective distance of the limit.
+      Examples:
+      * /mculllimit SPAWN CREEPER 16 64
+      * /mculllimit DAMAGE SHEEP 16 32
+  mcullentities:
+    description: Shows the entities supported by MusterCull.
+    aliases: [mustercullentities]
+    permission: mustercull.*
+    usage: /mcullentities [page number]
 permissions:
   mustercull.*:
     description: Allows access to all MusterCull commands

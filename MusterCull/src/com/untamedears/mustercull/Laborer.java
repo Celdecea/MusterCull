@@ -42,46 +42,28 @@ public class Laborer implements Runnable {
 		
 		Entity entity = entityLimitPair.getEntity();
 		
-		if (entity == null) {
-			// Nothing to do
-			return;
-		}
-		
 		if (entity.isDead()) {
 			return;
-		}
-	
-		if (entity.isDead()) {
-			// Still nothing to do
 		}
 		
 		ConfigurationLimit limit = entityLimitPair.getLimit();
 		
-		if (limit == null) {
-			// Still nothing to do
+		if (limit.getCulling() != CullType.DAMAGE) {
 			return;
 		}
 		
-		if (limit.culling != CullType.DAMAGE) {
-			return;
-		}
-			
-		if (limit.range <= 0) {
-			return;
-		}
-
 		Random random = new Random();
 		
 		// Loop through entities in range and count similar entities.
 		int count = 0;
 		
-		for (Entity otherEntity : entity.getNearbyEntities(limit.range, limit.range, limit.range)) {
+		for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange(), limit.getRange())) {
 			if (0 == otherEntity.getType().compareTo(entity.getType())) {
 				
 				count += 1;
 				
 				// If we've reached a limit for this entity, go ahead and damage it.
-				if (count >= limit.limit) {
+				if (count >= limit.getLimit()) {
 					
 					if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
 						if (Ageable.class.isAssignableFrom(entity.getClass())) {
