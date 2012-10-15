@@ -3,6 +3,7 @@ package com.untamedears.mustercull;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 
 /**
@@ -50,6 +51,18 @@ public class Commander implements CommandExecutor {
 			return commandEntities(sender, argv);
 		}
 		
+		if (caption.equalsIgnoreCase("mculltypes") || caption.equalsIgnoreCase("musterculltypes")) {
+			return commandTypes(sender, argv);
+		}
+		
+		if (caption.equalsIgnoreCase("muster")) {
+			return commandMuster(sender, argv);
+		}
+		
+		if (caption.equalsIgnoreCase("cull")) {
+			return commandCull(sender, argv);
+		}
+		
 		return false;
 	}
 	
@@ -64,8 +77,19 @@ public class Commander implements CommandExecutor {
 		
 		sender.sendMessage("MusterCull has " + this.pluginInstance.getRemainingDamageEntities() + " entities left to check.");
 		
+		int limit = 5;
+		for (StatusItem status : this.pluginInstance.getStats()) {
+			if (limit-- <= 0) {
+				break;
+			}
+			else {
+				sender.sendMessage("Player " + status.getEntity().getName() + " surrounded by " + status.getNearbyEntityCount() + " entities.");
+			}
+		}
+		
 		return true;
 	}
+	
 	
 	/**
 	 * Command handler which manipulates the limit table.
@@ -82,7 +106,7 @@ public class Commander implements CommandExecutor {
 		CullType cullingType = CullType.fromName(argv[0]);
 		
 		if (cullingType == null) {
-			sender.sendMessage("MusterCull: invalid culling type: " + argv[0]);
+			sender.sendMessage("MusterCull: invalid culling type: " + argv[0] + " (use /mculltypes)");
 			return true;
 		}
 		
@@ -149,4 +173,127 @@ public class Commander implements CommandExecutor {
 		
 		return true;
 	}
+	
+	
+	/**
+	 * Command handler which returns a list of Culling Types. 
+	 * @param sender A reference to a Bukkit CommandSender for this handler.
+	 * @param argv A list of arguments for this handler.
+	 * @return Whether or not this event was handled and should be canceled.
+	 */
+	public boolean commandTypes(CommandSender sender, String[] argv) {
+		
+		int string_count = 0;
+		StringBuilder message = new StringBuilder();
+		
+		for (CullType cullType : CullType.values()) {
+			
+			if (cullType.toString() == "null") {
+				continue;
+			}
+			
+			if (string_count > 0) {
+				message.append(", ");
+			}
+			
+			message.append(cullType.toString());
+			
+			if (string_count++ > 4) {
+				sender.sendMessage("Culling Types: " + message.toString());
+				message = new StringBuilder();
+				string_count = 0;
+			}
+			
+		}
+		
+		if (string_count > 0) {
+			sender.sendMessage("Culling Types: " + message.toString());
+			message = new StringBuilder();
+		}
+		
+		return true;
+	}
+	
+	
+	
+	
+	/**
+	 * Command handler damages nearby mobs.
+	 * @param sender A reference to a Bukkit CommandSender for this handler.
+	 * @param argv A list of arguments for this handler.
+	 * @return Whether or not this event was handled and should be canceled.
+	 */
+	public boolean commandMuster(CommandSender sender, String[] argv) {
+		
+		if (argv.length < 3) {
+			return false;
+		}
+		
+		EntityType entityType = EntityType.fromName(argv[0]);
+		
+		if (entityType == null) {
+			sender.sendMessage("MusterCull: invalid entity type: " + argv[0] + " (see /mcullentities)");
+			return true;
+		}
+		
+		Integer damage = Integer.parseInt(argv[1]);
+		Integer range = Integer.parseInt(argv[2]);
+		
+		if (damage <= 0) {
+			sender.sendMessage("MusterCull: damage must be greater than zero.");
+		}
+		
+		if (range <= 0) {
+			sender.sendMessage("MusterCull: range must be greater than zero.");
+			return true;
+		}
+		
+		for (Entity entity : this.pluginInstance.getNearbyEntities(sender.getName(), range, range, range)) {
+			if (entity.getType() == entityType) {
+				this.pluginInstance.damageEntity(entity, damage);
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Command handler which kills nearby mobs.
+	 * @param sender A reference to a Bukkit CommandSender for this handler.
+	 * @param argv A list of arguments for this handler.
+	 * @return Whether or not this event was handled and should be canceled.
+	 */
+	public boolean commandCull(CommandSender sender, String[] argv) {
+		
+		if (argv.length < 2) {
+			return false;
+		}
+		
+		EntityType entityType = EntityType.fromName(argv[0]);
+		
+		if (entityType == null) {
+			sender.sendMessage("MusterCull: invalid entity type: " + argv[0] + " (see /mcullentities)");
+			return true;
+		}
+		
+		Integer range = Integer.parseInt(argv[1]);
+		
+		if (range <= 0) {
+			sender.sendMessage("MusterCull: range must be greater than zero.");
+			return true;
+		}
+		
+		for (Entity entity : this.pluginInstance.getNearbyEntities(sender.getName(), range, range, range)) {
+			if (entity.getType() == entityType) {
+				this.pluginInstance.damageEntity(entity, 999);
+			}
+		}
+		
+		return true;
+	}
+	
+
+	
+	
+	
 }

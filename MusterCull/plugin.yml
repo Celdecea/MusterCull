@@ -4,10 +4,18 @@
 #
 name: MusterCull
 main: com.untamedears.mustercull.MusterCull
-version: 1.0
-description: Removes persistent mobs due to overcrowding.
+version: 1.1
+description: Removes persistent mobs due to overcrowding and other purposes.
 author: Celdecea
 commands:
+  muster:
+    description: Damages entities of a type surrounding the player.
+    permission: mustercull.*
+    usage: /muster entityType damage range
+  cull:
+    description: Kills entities of a type surrounding the player.
+    permission: mustercull.*
+    usage: /cull entityType range
   mcullstatus:
     description: Shows runtime status for the MusterCull plugin.
     aliases: [mustercullstatus]
@@ -32,8 +40,13 @@ commands:
     description: Shows the entities supported by MusterCull.
     aliases: [mustercullentities]
     permission: mustercull.*
-    usage: /mcullentities [page number]
+    usage: /mcullentities
+  mculltypes:
+    description: Shows the culling methods supported by MusterCull.
+    aliases: [musterculltypes]
+    permission: mustercull.*
+    usage: /mculltypes
 permissions:
   mustercull.*:
-    description: Allows access to all MusterCull commands
+    description: Allows access to all MusterCull commands.
     default: op
