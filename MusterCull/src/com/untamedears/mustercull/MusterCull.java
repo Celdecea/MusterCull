@@ -1,10 +1,16 @@
 package com.untamedears.mustercull;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 
 import org.bukkit.World;
+import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -18,6 +24,16 @@ public class MusterCull extends JavaPlugin {
 	 * Holds a list of entities to monitor.
 	 */
 	private Stack<EntityLimitPair> knownEntities = new Stack<EntityLimitPair>();
+	
+	/**
+	 * Holds a count of entities remaining for the status checker
+	 */
+	private int knownEntitiesRemaining = 0;
+	
+	/**
+	 * Whether or not we are returning a new entity to process (concurrency protection) 
+	 */
+	private boolean returningKnownEntity = false;
 	
 	/**
 	 * Buffer for keeping track of the parallel Laborer task.
@@ -77,23 +93,26 @@ public class MusterCull extends JavaPlugin {
     
     
 
-    
-    /**
-     * Return a limit from the config file for the provided entity.
-     * @param entity A reference to the Bukkit entity to return a limit for.
-     * @return The ConfigurationLimit for the entity, or null if none is defined.
-     */
-    public ConfigurationLimit getLimit(Entity entity) {
-    	return this.config.getLimit(entity.getType());
-    }
-    
     /**
      * Return a limit from the config file for the provided entityType.
      * @param entityType A Bukkit entityType to return a limit for.
      * @return The ConfigurationLimit for the entityType, or null if none is defined.
      */
-    public ConfigurationLimit getLimit(EntityType entityType) {
-    	return this.config.getLimit(entityType);
+    public ConfigurationLimit getLimit(EntityType entityType, CullType cullType) {
+    	
+    	List<ConfigurationLimit> limits = this.config.getLimits(entityType);
+    	
+    	if (limits == null) {
+    		return null;
+    	}
+    	
+    	for (ConfigurationLimit limit : limits) {
+    		if (cullType == limit.getCulling()) {
+    			return limit;
+    		}
+    	}
+    	
+    	return null;
     }
 
 
@@ -142,40 +161,76 @@ public class MusterCull extends JavaPlugin {
 	
 	
 	/**
-	 * Adds an entity to the list for damage monitoring.
-	 * @param entity A reference to a Bukkit Entity to monitor for mob damage.
-	 */
-	public void addEntityLimitPair(EntityLimitPair entityLimitPair) {
-		if (this.config.hasDamageLimits()) {
-			this.knownEntities.push(entityLimitPair);
-		}
-	}
-	
-	/**
 	 * Returns the next entity for monitoring.
 	 * @return A reference to an EntityLimitPair.
 	 */
 	public EntityLimitPair getNextEntity() {
 		
-		if (this.knownEntities.empty()) {
+		synchronized(this) {
+			if (this.returningKnownEntity) {
+				return null;
+			}
+			
+			this.returningKnownEntity = true;
+		}
+		
+		
+		EntityLimitPair entityLimitPair = null;
+		
+		if (this.knownEntitiesRemaining <= 0) {
+			
+			this.knownEntitiesRemaining = 0;
 			
 			for (World world : getServer().getWorlds()) {
 				for (Entity entity : world.getEntities()) {
-					ConfigurationLimit limit = this.config.getLimit(entity.getType());
+					ConfigurationLimit limit = this.getLimit(entity.getType(), CullType.DAMAGE);
 					
-					if (limit != null && limit.getCulling() == CullType.DAMAGE) { 
-						addEntityLimitPair(new EntityLimitPair(entity, limit));
+					if (limit != null) {
+						this.knownEntities.push(new EntityLimitPair(entity, limit));
+						this.knownEntitiesRemaining++;
 					}
 				}
 			}
 			
-			getLogger().info("Grabbed " + this.knownEntities.size() + " entities this round.");
-			return null;
+			getLogger().info("Grabbed " + this.knownEntitiesRemaining + " entities this round.");
 		}
-
-		EntityLimitPair entityLimitPair = this.knownEntities.pop(); 
-		return entityLimitPair;
+		else {
+			entityLimitPair = this.knownEntities.pop();
+			this.knownEntitiesRemaining--;
+		}
+		
+		synchronized(this) {
+			this.returningKnownEntity = false;
+			return entityLimitPair;
+		}
 	}
+	
+	
+	
+	/**
+	 * Returns information about mobs surrounding players
+	 * @return Information about mobs surrounding players
+	 */
+	public List<StatusItem> getStats() {
+		
+		List<StatusItem> stats = new ArrayList<StatusItem>();
+		
+		for (World world : getServer().getWorlds()) {
+			for (Player player : world.getPlayers()) {
+				stats.add(new StatusItem(player));
+			}
+		}
+		
+		Collections.sort(stats, new StatusItemComparator());
+		Collections.reverse(stats);
+		return stats;
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	/**
@@ -189,14 +244,98 @@ public class MusterCull extends JavaPlugin {
 	
 	
 	
+	
+	
 
 	/**
 	 * Returns the number of entities left to check for damage in this round.
 	 * @return The size of the stack of Bukkit entities left to check.
 	 */
 	public int getRemainingDamageEntities() {
-		return this.knownEntities.size();
+		return this.knownEntitiesRemaining;
 	}
 
 
+
+	/**
+	 * Returns nearby entities to a player by name.
+	 * @param playerName The name of a player to look up
+	 * @param x Distance along the x plane to look from player
+	 * @param y Distance along the y plane to look from player
+	 * @param z Distance along the z plane to look from player
+	 * @return The list of entities surrounding the player
+	 */
+	public List<Entity> getNearbyEntities(String playerName, int x, int y, int z) {
+		
+		for (World world : getServer().getWorlds()) {
+			for (Player player : world.getPlayers()) {
+				if (0 == player.getName().compareToIgnoreCase(playerName)) {
+					return player.getNearbyEntities(x, y, z);
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Causes a specified amount of damage to an entity.
+	 * @param entity The bukkit entity to cause damage to
+	 * @param damage The amount of damage to cause to the entity
+	 */
+	public void damageEntity(Entity entity, int damage) {
+		
+		if (Ageable.class.isAssignableFrom(entity.getClass())) {
+			Ageable agingEntity = (Ageable)entity;
+			
+			if (agingEntity.isAdult()) {
+				agingEntity.damage(damage);
+			}
+			else {
+				agingEntity.damage(2 * damage);
+			}
+		}
+		else if (LivingEntity.class.isAssignableFrom(entity.getClass())) {
+			LivingEntity livingEntity = (LivingEntity)entity;
+			livingEntity.damage(damage);
+		}
+	}
+	
+	
+	
+	/**
+	 * Performs configured culling operations on the given entity.
+	 * @param entity The bukkit entity to perform culling operations for.
+	 * @param limit The limit to run for this entity.
+	 * @return Whether the entity check was successful (i.e. we need to damage/kill something)
+	 */
+	public boolean runEntityChecks(Entity entity, ConfigurationLimit limit) {
+			
+		// If the limit is 0, prevent all of this entity type from spawning 
+		if (limit.getLimit() <= 0) {
+			return true;
+		}
+		
+		// Loop through entities in range and count similar entities.
+		int count = 0;
+		
+		for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange(), limit.getRange())) {
+			if (0 == otherEntity.getType().compareTo(entity.getType())) {
+				count += 1;
+				
+				// If we've reached a limit for this entity, prevent it from spawning.
+				if (count >= limit.getLimit()) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	
+	
+	
 }
