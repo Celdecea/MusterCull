@@ -1,5 +1,6 @@
 package com.untamedears.mustercull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Configuration {
 	/**
 	 * Mob limits loaded from the configuration file.
 	 */
-	private Map<EntityType, ConfigurationLimit> mobLimits = new HashMap<EntityType, ConfigurationLimit>();
+	private Map<EntityType, List<ConfigurationLimit>> mobLimits = new HashMap<EntityType, List<ConfigurationLimit>>();
 	
 	/**
 	 * Whether or not we have limits with CullType DAMAGE.
@@ -182,19 +183,42 @@ public class Configuration {
 		if (limit.getCulling() == CullType.SPAWN) {
 			this.hasSpawnLimits = true;
 		}
-		
-		mobLimits.put(type, limit);
-		this.dirty = true;
 
+		if (mobLimits.containsKey(type)) {
+			List<ConfigurationLimit> otherLimits = mobLimits.get(type);
+			
+			boolean foundOneToEdit = false;
+			
+			for (ConfigurationLimit otherLimit : otherLimits) {
+				if (0 == otherLimit.getCulling().compareTo(limit.getCulling())) {
+					otherLimit.setLimit(limit.getLimit());
+					otherLimit.setRange(limit.getRange());
+					
+					foundOneToEdit = true;
+					break;
+				}
+			}
+			
+			if (!foundOneToEdit) {
+				otherLimits.add(limit);
+			}
+		}
+		else {
+			List<ConfigurationLimit> otherLimits = new ArrayList<ConfigurationLimit>();
+			otherLimits.add(limit);
+			mobLimits.put(type, otherLimits);
+		}
+
+		this.dirty = true;
 		this.pluginInstance.getLogger().info("Culling " + type.toString() + " using " + limit.getCulling().toString() + "; limit=" + limit.getLimit() + " range=" + limit.getRange());
 	}
 	
 	/**
-	 * Returns the ConfigurationLimit for the specified mob type. 
+	 * Returns the ConfigurationLimits for the specified mob type. 
 	 * @param type The type of entity to get a ConfigurationLimit for.
-	 * @return The limit for the entity type, or null.
+	 * @return The limits for the entity type, or null.
 	 */
-	public ConfigurationLimit getLimit(EntityType type) {
+	public List<ConfigurationLimit> getLimits(EntityType type) {
 		return mobLimits.get(type);
 	}
 
