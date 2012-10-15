@@ -2,9 +2,7 @@ package com.untamedears.mustercull;
 
 import java.util.Random;
 
-import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 
 /**
  * This class handles routinely dealing damage to chunks.
@@ -42,7 +40,7 @@ public class Laborer implements Runnable {
 		
 		Entity entity = entityLimitPair.getEntity();
 		
-		if (entity.isDead()) {
+		if (entity == null || entity.isDead()) {
 			return;
 		}
 		
@@ -66,20 +64,7 @@ public class Laborer implements Runnable {
 				if (count >= limit.getLimit()) {
 					
 					if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
-						if (Ageable.class.isAssignableFrom(entity.getClass())) {
-							Ageable agingEntity = (Ageable)entity;
-							
-							if (agingEntity.isAdult()) {
-								agingEntity.damage(this.pluginInstance.getDamage());
-							}
-							else {
-								agingEntity.damage(2 * this.pluginInstance.getDamage());
-							}
-						}
-						else if (LivingEntity.class.isAssignableFrom(entity.getClass())) {
-							LivingEntity livingEntity = (LivingEntity)entity;
-							livingEntity.damage(this.pluginInstance.getDamage());
-						}
+						this.pluginInstance.damageEntity(entity, this.pluginInstance.getDamage());
 					}
 					
 					return;
