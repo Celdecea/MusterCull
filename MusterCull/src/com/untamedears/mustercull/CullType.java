@@ -10,7 +10,12 @@ enum CullType {
 	 * Uses Bukkit events to deny a spawn.
 	 */
 	SPAWN,
-	
+
+	/**
+	 * Uses Bukkit events to prevent a spawner from operating.
+	 */
+	SPAWNER,
+
 	/**
 	 * Uses damage on mobs in crowded chunks.
 	 */

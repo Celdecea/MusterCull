@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 
 /**
  * This class provides event handlers for game entities.
@@ -26,44 +27,26 @@ public class EntityListener extends Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true)
 	public void onCreatureSpawn(CreatureSpawnEvent event) {
-
-		// Grab a configured limit for event entity
-		Entity entity = event.getEntity();
-		ConfigurationLimit limit = this.getPluginInstance().getLimit(entity);
 		
-		if (limit == null) {
+		Entity entity = event.getEntity();
+		ConfigurationLimit limit = null;
+		
+		if (event.getSpawnReason() == SpawnReason.SPAWNER) {
+			
+			limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWNER);
+			
+			if (limit != null) {
+				event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
+				return;
+			}	
+		}
+		
+		limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWN);
+		
+		if (limit != null) {
+			event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
 			return;
 		}
-		
-		if (limit.getCulling() == CullType.SPAWN) {
-			 
-			// If the limit is 0, prevent all of this entity type from spawning 
-			if (limit.getLimit() <= 0) {
-				event.setCancelled(true);
-				return;
-			}
-			
-			// Loop through entities in range and count similar entities.
-			int count = 0;
-			
-			for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange() / 2, limit.getRange())) {
-				if (0 == otherEntity.getType().compareTo(entity.getType())) {
-					count += 1;
-					
-					// If we've reached a limit for this entity, prevent it from spawning.
-					if (count >= limit.getLimit()) {
-						event.setCancelled(true);
-						return;
-					}
-				}
-			}
-		}
-		
-		
-		if (limit.getCulling() == CullType.DAMAGE) {
-			getPluginInstance().addEntityLimitPair(new EntityLimitPair(entity, limit));
-		}
-		
 	}
-
+	
 }
