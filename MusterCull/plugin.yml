@@ -8,6 +8,17 @@ version: 1.1
 description: Removes persistent mobs due to overcrowding and other purposes.
 author: Celdecea
 commands:
+  mcull:
+    description: Pauses, continues, or otherwise controls the plugin.
+    aliases: [mustercull]
+    permission: mustercull.*
+    usage: |
+      /mcull pause //pauses all culling types
+      /mcull continue //continues all culling types
+      You can specify a culling type to pause only specific areas of the plugin:
+      /mcull pause spawner //pauses spawner culling
+      Use /mculltypes to see which culling types can be paused.
+      /mcull reset //clears the damage list (not very safe!)
   muster:
     description: Damages entities of a type surrounding the player.
     permission: mustercull.*

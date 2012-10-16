@@ -13,7 +13,6 @@ import org.bukkit.entity.EntityType;
  */
 public class Commander implements CommandExecutor {
 
-	
 	/**
 	 * Buffer for a reference to the plug-in instance.
 	 */
@@ -38,6 +37,10 @@ public class Commander implements CommandExecutor {
 	 */
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String caption, String[] argv) {
+		
+		if (caption.equalsIgnoreCase("mcull") || caption.equalsIgnoreCase("mustercull")) {
+			return commandControl(sender, argv);
+		}
 		
 		if (caption.equalsIgnoreCase("mcullstatus") || caption.equalsIgnoreCase("mustercullstatus")) {
 			return commandStatus(sender, argv);
@@ -68,6 +71,57 @@ public class Commander implements CommandExecutor {
 	
 	
 	/**
+	 * Command handler which controls the plugin.
+	 * @param sender A reference to a Bukkit CommandSender for this handler.
+	 * @param argv A list of arguments for this handler.
+	 * @return Whether or not this event was handled and should be canceled.
+	 */
+	public boolean commandControl(CommandSender sender, String[] argv) {
+
+		if (argv.length < 1) {
+			return false;
+		}
+
+		CullType cullType = null;
+		
+		if (argv.length >= 2) {
+			cullType = CullType.fromName(argv[1]);
+		}
+		
+		if (argv[0].compareToIgnoreCase("pause") == 0) {
+			if (cullType == null) {
+				this.pluginInstance.pauseAllCulling();
+				sender.sendMessage("MusterCull: culling paused for all culling types.");
+			}
+			else {
+				this.pluginInstance.pauseCulling(cullType);
+				sender.sendMessage("MusterCull: culling paused for " + cullType.toString() + ", if it wasn't already.");
+			}
+		}
+		else if (argv[0].compareToIgnoreCase("continue") == 0 || 0 == argv[0].compareToIgnoreCase("resume")) {
+			if (cullType == null) {
+				this.pluginInstance.resumeAllCulling();
+				sender.sendMessage("MusterCull: culling resumed for all culling types.");
+			}
+			else {
+				this.pluginInstance.resumeCulling(cullType);
+				sender.sendMessage("MusterCull: culling resumed for " + cullType.toString() + ", if it was disabled.");
+			}
+		}
+		else if (argv[0].compareToIgnoreCase("reset") == 0) {
+			this.pluginInstance.clearRemainingDamageEntities();
+			sender.sendMessage("MusterCull: remaining entities cleared from the damage list.");
+		}
+		else {
+			return false;
+		}
+			
+		
+		return true;
+	}
+	
+	
+	/**
 	 * Command handler which returns status information.
 	 * @param sender A reference to a Bukkit CommandSender for this handler.
 	 * @param argv A list of arguments for this handler.
@@ -75,8 +129,16 @@ public class Commander implements CommandExecutor {
 	 */
 	public boolean commandStatus(CommandSender sender, String[] argv) {
 		
-		sender.sendMessage("MusterCull has " + this.pluginInstance.getRemainingDamageEntities() + " entities left to check.");
-		
+		if (this.pluginInstance.hasDamageLimits()) {
+			sender.sendMessage("MusterCull is using a laborer to damage " + this.pluginInstance.getRemainingDamageEntities() + " remaining entities before starting over.");
+		}
+
+		for (CullType cullType : CullType.values()) {
+			if (this.pluginInstance.isPaused(cullType)) {
+				sender.sendMessage("CullType " + cullType.toString() + " is paused.");
+			}
+		}
+
 		int limit = 5;
 		for (StatusItem status : this.pluginInstance.getStats()) {
 			if (limit-- <= 0) {

@@ -31,21 +31,25 @@ public class EntityListener extends Listener {
 		Entity entity = event.getEntity();
 		ConfigurationLimit limit = null;
 		
-		if (event.getSpawnReason() == SpawnReason.SPAWNER) {
-			
-			limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWNER);
+		if (!this.getPluginInstance().isPaused(CullType.SPAWNER)) {
+			if (event.getSpawnReason() == SpawnReason.SPAWNER) {
+				
+				limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWNER);
+				
+				if (limit != null) {
+					event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
+					return;
+				}	
+			}
+		}
+		
+		if (!this.getPluginInstance().isPaused(CullType.SPAWN)) {
+			limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWN);
 			
 			if (limit != null) {
 				event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
 				return;
-			}	
-		}
-		
-		limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWN);
-		
-		if (limit != null) {
-			event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
-			return;
+			}
 		}
 	}
 	

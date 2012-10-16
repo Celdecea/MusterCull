@@ -32,6 +32,10 @@ public class Laborer implements Runnable {
 	@Override
 	public void run() {
 		
+		if (this.pluginInstance.isPaused(CullType.DAMAGE)) {
+			return;
+		}
+		
 		EntityLimitPair entityLimitPair = this.pluginInstance.getNextEntity();
 		
 		if (entityLimitPair == null) {

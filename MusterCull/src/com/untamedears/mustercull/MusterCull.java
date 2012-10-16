@@ -2,7 +2,9 @@ package com.untamedears.mustercull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import org.bukkit.World;
@@ -31,6 +33,11 @@ public class MusterCull extends JavaPlugin {
 	private int knownEntitiesRemaining = 0;
 	
 	/**
+	 * Flags whether or not we should clear knownEntities list next time around
+	 */
+	private boolean clearKnownEntities = false;
+	
+	/**
 	 * Whether or not we are returning a new entity to process (concurrency protection) 
 	 */
 	private boolean returningKnownEntity = false;
@@ -44,6 +51,11 @@ public class MusterCull extends JavaPlugin {
 	 * Buffer for holding configuration information for this plug-in.
 	 */
 	private Configuration config = null;
+	
+	/**
+	 * Stores any paused culling types we may have.
+	 */
+	private Set<CullType> pausedCullTypes = new HashSet<CullType>();
 	
 	/**
 	 * Called when the plug-in is enabled by Bukkit.
@@ -166,7 +178,7 @@ public class MusterCull extends JavaPlugin {
 	 */
 	public EntityLimitPair getNextEntity() {
 		
-		synchronized(this) {
+		synchronized(this.knownEntities) {
 			if (this.returningKnownEntity) {
 				return null;
 			}
@@ -174,12 +186,23 @@ public class MusterCull extends JavaPlugin {
 			this.returningKnownEntity = true;
 		}
 		
-		
 		EntityLimitPair entityLimitPair = null;
 		
-		if (this.knownEntitiesRemaining <= 0) {
+		boolean clearEntities = false;
+		
+		synchronized(this) {
+			clearEntities = this.clearKnownEntities;
+			this.clearKnownEntities = false;
+		}
+		
+		if (this.knownEntitiesRemaining <= 0 || clearEntities) {
+			
+			if (clearEntities) {
+				getLogger().info("Forcing entity list to clear...");
+			}
 			
 			this.knownEntitiesRemaining = 0;
+			this.knownEntities.clear();
 			
 			for (World world : getServer().getWorlds()) {
 				for (Entity entity : world.getEntities()) {
@@ -198,8 +221,8 @@ public class MusterCull extends JavaPlugin {
 			entityLimitPair = this.knownEntities.pop();
 			this.knownEntitiesRemaining--;
 		}
-		
-		synchronized(this) {
+	
+		synchronized(this.knownEntities) {
 			this.returningKnownEntity = false;
 			return entityLimitPair;
 		}
@@ -253,6 +276,16 @@ public class MusterCull extends JavaPlugin {
 	 */
 	public int getRemainingDamageEntities() {
 		return this.knownEntitiesRemaining;
+	}
+	
+	/**
+	 * Clears the entities that may be waiting for damage.
+	 */
+	public void clearRemainingDamageEntities() {
+		getLogger().info("Flagging damage list for clearing...");
+		synchronized(this) {
+			this.clearKnownEntities = true;
+		}
 	}
 
 
@@ -337,5 +370,60 @@ public class MusterCull extends JavaPlugin {
 	
 	
 	
+
+	/**
+	 * Pauses all culling.
+	 */
+	public void pauseAllCulling() {
+		getLogger().info("Pausing all culling types...");
+		synchronized(this.pausedCullTypes) {
+			for (CullType cullType : CullType.values()) {
+				this.pausedCullTypes.add(cullType);
+			}
+		}
+	}
 	
+	/**
+	 * Resumes all culling.
+	 */
+	public void resumeAllCulling() {
+		getLogger().info("Resuming all paused culling types...");
+		synchronized(this.pausedCullTypes) {
+			this.pausedCullTypes.clear();
+		}
+	}
+	
+	/**
+	 * Pauses a specific CullType blocking its functionality.
+	 * @param cullType The CullType to disable temporarily.
+	 */
+	public void pauseCulling(CullType cullType) {
+		getLogger().info("Pausing culling type " + cullType.toString() + "...");
+		synchronized(this.pausedCullTypes) {
+			this.pausedCullTypes.add(cullType);
+		}
+	}
+	
+	/**
+	 * Resumes a specific CullType which was paused.
+	 * @param cullType The CullType to reenable.
+	 */
+	public void resumeCulling(CullType cullType) {
+		getLogger().info("Resuming culling type " + cullType.toString() + "...");
+		synchronized(this.pausedCullTypes) {
+			this.pausedCullTypes.remove(cullType);
+		}
+	}
+	
+	/**
+	 * Returns whether or not a CullType is paused.
+	 * @param cullType The CullType to test the status of.
+	 * @return Whether or not the CullType is paused.
+	 */
+	public boolean isPaused(CullType cullType) {
+		synchronized(this.pausedCullTypes) {
+			return this.pausedCullTypes.contains(cullType);
+		}
+	}
+
 }

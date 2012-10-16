@@ -43,7 +43,6 @@ public class Configuration {
 	 */
 	private boolean hasSpawnLimits = false;
 	
-	
 	/**
 	 * Number of ticks between calls to the chunk damage laborer. 
 	 */
@@ -280,7 +279,4 @@ public class Configuration {
 		this.damageChance = damageChance;
 		this.dirty = true;
 	}
-
-
-	
 }
