@@ -3,8 +3,8 @@ package com.untamedears.mustercull;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 
 /**
  * Handles commands from players or server console users.
@@ -129,13 +129,17 @@ public class Commander implements CommandExecutor {
 	 */
 	public boolean commandStatus(CommandSender sender, String[] argv) {
 		
+		boolean reported = false;
+		
 		if (this.pluginInstance.hasDamageLimits()) {
 			sender.sendMessage("MusterCull is using a laborer to damage " + this.pluginInstance.getRemainingDamageEntities() + " remaining entities before starting over.");
+			reported = true;
 		}
 
 		for (CullType cullType : CullType.values()) {
 			if (this.pluginInstance.isPaused(cullType)) {
 				sender.sendMessage("CullType " + cullType.toString() + " is paused.");
+				reported = true;
 			}
 		}
 
@@ -146,7 +150,13 @@ public class Commander implements CommandExecutor {
 			}
 			else {
 				sender.sendMessage("Player " + status.getEntity().getName() + " surrounded by " + status.getNearbyEntityCount() + " entities.");
+				reported = true;
 			}
+		}
+		
+		// Last message
+		if (!reported) {
+			sender.sendMessage("MusterCull has nothing to report.");
 		}
 		
 		return true;
@@ -310,10 +320,28 @@ public class Commander implements CommandExecutor {
 			return true;
 		}
 		
-		for (Entity entity : this.pluginInstance.getNearbyEntities(sender.getName(), range, range, range)) {
-			if (entity.getType() == entityType) {
-				this.pluginInstance.damageEntity(entity, damage);
+		String searchName = null;
+		
+		if (argv.length > 3) {
+			searchName = argv[3];
+		}
+		else {
+			if (sender instanceof Player) {
+				searchName = sender.getName();
 			}
+			else {
+				sender.sendMessage("MusterCull: Please add a player name to end of the command.");
+				return true;
+			}
+		}
+
+		int count = this.pluginInstance.damageEntitiesAroundPlayer(searchName, entityType, damage, range);
+		
+		if (count > 0) {
+			sender.sendMessage("MusterCull: damaged up to " + count + " entities of type " + entityType + " around player " + searchName + ".");
+		}
+		else {
+			sender.sendMessage("MusterCull: Could not find any entities of type " + entityType + " to damage around player "+ searchName + ".");
 		}
 		
 		return true;
@@ -345,17 +373,35 @@ public class Commander implements CommandExecutor {
 			return true;
 		}
 		
-		for (Entity entity : this.pluginInstance.getNearbyEntities(sender.getName(), range, range, range)) {
-			if (entity.getType() == entityType) {
-				this.pluginInstance.damageEntity(entity, 999);
+		String searchName = null;
+		
+		if (argv.length > 2) {
+			searchName = argv[2];
+		}
+		else {
+			if (sender instanceof Player) {
+				searchName = sender.getName();
 			}
+			else {
+				sender.sendMessage("MusterCull: Please add a player name to end of the command.");
+				return true;
+			}
+		}
+
+		int count = this.pluginInstance.damageEntitiesAroundPlayer(searchName, entityType, 999, range);
+		
+		if (count > 0) {
+			sender.sendMessage("MusterCull: damaged up to " + count + " entities of type " + entityType + " around player " + searchName + ".");
+		}
+		else {
+			sender.sendMessage("MusterCull: Could not find any entities of type " + entityType + " to damage around player "+ searchName + ".");
 		}
 		
 		return true;
 	}
 	
 
-	
+
 	
 	
 }

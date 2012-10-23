@@ -298,17 +298,46 @@ public class MusterCull extends JavaPlugin {
 	 * @param z Distance along the z plane to look from player
 	 * @return The list of entities surrounding the player
 	 */
-	public List<Entity> getNearbyEntities(String playerName, int x, int y, int z) {
+	public List<Entity> getNearbyEntities(String playerName, int rangeX, int rangeY, int rangeZ) {
 		
 		for (World world : getServer().getWorlds()) {
 			for (Player player : world.getPlayers()) {
 				if (0 == player.getName().compareToIgnoreCase(playerName)) {
-					return player.getNearbyEntities(x, y, z);
+					return player.getNearbyEntities(rangeX, rangeY, rangeZ);
 				}
 			}
 		}
 		
 		return null;
+	}
+
+	
+	/**
+	 * Causes damage to entities of a certain type surrounding a given player.
+	 * @param playerName The name of the player to search around
+	 * @param entityType The type of entity to damage around the player
+	 * @param damage The amount of damage to deal to the player
+	 * @param range The range from the player to check
+	 * @return The number of entities damage may have been applied to
+	 */
+	public int damageEntitiesAroundPlayer(String playerName, EntityType entityType, int damage, int range) {
+	
+		int count = 0;
+		
+		List<Entity> nearbyEntities = getNearbyEntities(playerName, range, range, range);
+		
+		if (nearbyEntities == null) {
+			return 0;
+		}		
+		
+		for (Entity entity : nearbyEntities) {
+			if (entity.getType() == entityType) {
+				this.damageEntity(entity, damage);
+				count++;
+			}
+		}
+		
+		return count;
 	}
 	
 	
@@ -317,6 +346,7 @@ public class MusterCull extends JavaPlugin {
 	 * Causes a specified amount of damage to an entity.
 	 * @param entity The bukkit entity to cause damage to
 	 * @param damage The amount of damage to cause to the entity
+	 * @return The amount of damage this method tried to apply to the entity
 	 */
 	public void damageEntity(Entity entity, int damage) {
 		
@@ -334,6 +364,10 @@ public class MusterCull extends JavaPlugin {
 			LivingEntity livingEntity = (LivingEntity)entity;
 			livingEntity.damage(damage);
 		}
+		else {
+			getLogger().warning("Attempt to damage non-living entity detected.");
+		}
+		
 	}
 	
 	
