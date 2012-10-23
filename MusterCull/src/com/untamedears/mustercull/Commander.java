@@ -189,8 +189,30 @@ public class Commander implements CommandExecutor {
 			return true;
 		}
 		
-		Integer limit = Integer.parseInt(argv[2]);
-		Integer range = Integer.parseInt(argv[3]);
+		int limit = 0;
+		
+		try {
+			limit = Integer.parseInt(argv[2]);
+		}
+		catch (NumberFormatException e) {
+			sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[2]);
+			return true;
+		}
+		
+		if (limit < 0) {
+			sender.sendMessage("MusterCull: limit must be greater than or equal to zero.");
+			return true;
+		}
+		
+		int range = 0;
+		
+		try {
+			range = Integer.parseInt(argv[3]);
+		}
+		catch (NumberFormatException e) {
+			sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[3]);
+			return true;
+		}
 		
 		if (range <= 0) {
 			sender.sendMessage("MusterCull: range must be greater than zero.");
@@ -308,11 +330,28 @@ public class Commander implements CommandExecutor {
 			return true;
 		}
 		
-		Integer damage = Integer.parseInt(argv[1]);
-		Integer range = Integer.parseInt(argv[2]);
+		int damage = 0;
+		
+		try {
+			damage = Integer.parseInt(argv[1]);
+		}
+		catch (NumberFormatException e) {
+			sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[1]);
+			return true;
+		}
 		
 		if (damage <= 0) {
 			sender.sendMessage("MusterCull: damage must be greater than zero.");
+		}
+		 
+		int range = 0;
+		
+		try {
+			range = Integer.parseInt(argv[2]);
+		}
+		catch (NumberFormatException e) {
+			sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[2]);
+			return true;
 		}
 		
 		if (range <= 0) {
@@ -366,7 +405,15 @@ public class Commander implements CommandExecutor {
 			return true;
 		}
 		
-		Integer range = Integer.parseInt(argv[1]);
+		int range = 0;
+		
+		try {
+			range = Integer.parseInt(argv[1]);
+		}
+		catch (NumberFormatException e) {
+			sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[1]);
+			return true;
+		}
 		
 		if (range <= 0) {
 			sender.sendMessage("MusterCull: range must be greater than zero.");
