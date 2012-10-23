@@ -293,9 +293,9 @@ public class MusterCull extends JavaPlugin {
 	/**
 	 * Returns nearby entities to a player by name.
 	 * @param playerName The name of a player to look up
-	 * @param x Distance along the x plane to look from player
-	 * @param y Distance along the y plane to look from player
-	 * @param z Distance along the z plane to look from player
+	 * @param rangeX Distance along the x plane to look from player
+	 * @param rangeY Distance along the y plane to look from player
+	 * @param rangeZ Distance along the z plane to look from player
 	 * @return The list of entities surrounding the player
 	 */
 	public List<Entity> getNearbyEntities(String playerName, int rangeX, int rangeY, int rangeZ) {
@@ -346,7 +346,6 @@ public class MusterCull extends JavaPlugin {
 	 * Causes a specified amount of damage to an entity.
 	 * @param entity The bukkit entity to cause damage to
 	 * @param damage The amount of damage to cause to the entity
-	 * @return The amount of damage this method tried to apply to the entity
 	 */
 	public void damageEntity(Entity entity, int damage) {
 		
