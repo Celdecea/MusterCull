@@ -162,14 +162,6 @@ public class MusterCull extends JavaPlugin {
 	
 	
 	
-	/**
-	 * Returns the amount of damage to apply to a crowded mob.
-	 * @return The amount of damage to apply to a crowded mob. 
-	 */
-	public int getDamage() {
-		return this.config.getDamage();
-	}
-	
 	
 	
 	/**
@@ -264,12 +256,46 @@ public class MusterCull extends JavaPlugin {
 		return this.config.getDamageChance();
 	}
 	
+	/**
+	 * Sets the percent chance that a mob will be damaged when crowded.
+	 * @param damageChance Percent chance that a mob will be damaged when crowded.
+	 */
+	public void setDamageChance(int damageChance) {
+		this.config.setDamageChance(damageChance);
+	}
 	
+	/**
+	 * Returns the number of entities to take damage each time the laborer is called.
+	 * @return Number of entities to take damage each time the laborer is called.
+	 */
+	public int getDamageCalls() {
+		return this.config.getDamageCalls();
+	}
 	
+	/**
+	 * Sets the number of entities to take damage each time the laborer is called.
+	 * @param damageCalls Number of entities to take damage each time the laborer is called.
+	 */
+	public void setDamageCalls(int damageCalls) {
+		this.config.setDamageCalls(damageCalls);
+	}
 	
+	/**
+	 * Returns the amount of damage to apply to a crowded mob.
+	 * @return The amount of damage to apply to a crowded mob. 
+	 */
+	public int getDamage() {
+		return this.config.getDamage();
+	}
 	
+	/**
+	 * Sets the amount of damage to apply to a crowded mob.
+	 * @param damage The amount of damage to apply to a crowded mob. 
+	 */
+	public void setDamage(int damage) {
+		this.config.setDamage(damage);
+	}
 	
-
 	/**
 	 * Returns the number of entities left to check for damage in this round.
 	 * @return The size of the stack of Bukkit entities left to check.
@@ -343,7 +369,7 @@ public class MusterCull extends JavaPlugin {
 	
 	
 	/**
-	 * Causes a specified amount of damage to an entity.
+	 * Causes a specified amount of damage to an entity, doubled for baby animals.
 	 * @param entity The bukkit entity to cause damage to
 	 * @param damage The amount of damage to cause to the entity
 	 */
@@ -364,7 +390,7 @@ public class MusterCull extends JavaPlugin {
 			livingEntity.damage(damage);
 		}
 		else {
-			getLogger().warning("Attempt to damage non-living entity detected.");
+			getLogger().warning("Attempt to damage non-living entity '" + entity.getType().toString() + "' detected.");
 		}
 		
 	}

@@ -38,40 +38,42 @@ public class Commander implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String caption, String[] argv) {
 		
-		if (caption.equalsIgnoreCase("mcull") || caption.equalsIgnoreCase("mustercull")) {
+		if (caption.length() <= 0) {
+			return false;
+		}
+		
+		caption = caption.toLowerCase().replace("mustercull", "mcull");
+		
+		if (caption.equals("mcull")) {
 			return commandControl(sender, argv);
 		}
-		
-		if (caption.equalsIgnoreCase("mcullstatus") || caption.equalsIgnoreCase("mustercullstatus")) {
-			return commandStatus(sender, argv);
-		}
-		
-		if (caption.equalsIgnoreCase("mculllimit") || caption.equalsIgnoreCase("musterculllimit")) {
-			return commandLimit(sender, argv);
-		}
-		
-		if (caption.equalsIgnoreCase("mcullentities") || caption.equalsIgnoreCase("mustercullentities")) {
-			return commandEntities(sender, argv);
-		}
-		
-		if (caption.equalsIgnoreCase("mculltypes") || caption.equalsIgnoreCase("musterculltypes")) {
-			return commandTypes(sender, argv);
-		}
-		
-		if (caption.equalsIgnoreCase("muster")) {
+		else if (caption.equals("muster")) {
 			return commandMuster(sender, argv);
 		}
-		
-		if (caption.equalsIgnoreCase("cull")) {
+		else if (caption.equals("cull")) {
 			return commandCull(sender, argv);
 		}
-		
-		return false;
+		else if (caption.equals("mcullstatus")) {
+			return commandStatus(sender, argv);
+		}
+		else if (caption.equals("mculllimit")) {
+			return commandLimit(sender, argv);
+		}
+		else if (caption.equals("mcullentities")) {
+			return commandEntities(sender, argv);
+		}
+		else if (caption.equals("mculltypes")) {
+			return commandTypes(sender, argv);
+		}
+		else {
+			return false;
+		}
 	}
 	
 	
 	/**
-	 * Command handler which controls the plugin.
+	 * Command handler which allows pausing/resuming individual culling types
+	 * and resetting the list of entities to damage (if any).
 	 * @param sender A reference to a Bukkit CommandSender for this handler.
 	 * @param argv A list of arguments for this handler.
 	 * @return Whether or not this event was handled and should be canceled.
@@ -81,14 +83,20 @@ public class Commander implements CommandExecutor {
 		if (argv.length < 1) {
 			return false;
 		}
-
-		CullType cullType = null;
-		
-		if (argv.length >= 2) {
-			cullType = CullType.fromName(argv[1]);
-		}
 		
 		if (argv[0].compareToIgnoreCase("pause") == 0) {
+			
+			CullType cullType = null;
+			
+			if (argv.length >= 2) {
+				cullType = CullType.fromName(argv[1]);
+				
+				if (cullType == null) {
+					sender.sendMessage("MusterCull: unknown culling type '" + argv[1] + "' provided. Use /mculltypes to get a list.");
+					return true;
+				}
+			}
+			
 			if (cullType == null) {
 				this.pluginInstance.pauseAllCulling();
 				sender.sendMessage("MusterCull: culling paused for all culling types.");
@@ -99,6 +107,18 @@ public class Commander implements CommandExecutor {
 			}
 		}
 		else if (argv[0].compareToIgnoreCase("continue") == 0 || 0 == argv[0].compareToIgnoreCase("resume")) {
+			
+			CullType cullType = null;
+			
+			if (argv.length >= 2) {
+				cullType = CullType.fromName(argv[1]);
+				
+				if (cullType == null) {
+					sender.sendMessage("MusterCull: unknown culling type '" + argv[1] + "' provided. Use /mculltypes to get a list.");
+					return true;
+				}
+			}
+			
 			if (cullType == null) {
 				this.pluginInstance.resumeAllCulling();
 				sender.sendMessage("MusterCull: culling resumed for all culling types.");
@@ -111,6 +131,60 @@ public class Commander implements CommandExecutor {
 		else if (argv[0].compareToIgnoreCase("reset") == 0) {
 			this.pluginInstance.clearRemainingDamageEntities();
 			sender.sendMessage("MusterCull: remaining entities cleared from the damage list.");
+		}
+		else if (argv[0].compareToIgnoreCase("damage") == 0) {
+			
+			int damage = 0;
+			
+			if (argv.length >= 1) {
+				try {
+					damage = Integer.parseInt(argv[1]);
+				}
+				catch (NumberFormatException e) {
+					sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[1]);
+					return true;
+				}
+			}
+			
+			this.pluginInstance.setDamage(damage);
+			
+			sender.sendMessage("MusterCull: setting damage to " + damage + ".");
+		}
+		else if (argv[0].compareToIgnoreCase("count") == 0) {
+			
+			int count = 0;
+			
+			if (argv.length >= 1) {
+				try {
+					count = Integer.parseInt(argv[1]);
+				}
+				catch (NumberFormatException e) {
+					sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[1]);
+					return true;
+				}
+			}
+			
+			this.pluginInstance.setDamageCalls(count);
+			
+			sender.sendMessage("MusterCull: setting damage call count to " + count + ".");
+		}
+		else if (argv[0].compareToIgnoreCase("chance") == 0) {
+	
+			int chance = 0;
+			
+			if (argv.length >= 1) {
+				try {
+					chance = Integer.parseInt(argv[1]);
+				}
+				catch (NumberFormatException e) {
+					sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[1]);
+					return true;
+				}
+			}
+			
+			this.pluginInstance.setDamageChance(chance);
+			
+			sender.sendMessage("MusterCull: setting damage chance count to " + chance + ".");
 		}
 		else {
 			return false;
@@ -252,7 +326,7 @@ public class Commander implements CommandExecutor {
 				message.append(entityType.getName());
 				
 				if (string_count++ > 4) {
-					sender.sendMessage("Entity Types: " + message.toString());
+					sender.sendMessage("MusterCull Entity Types: " + message.toString());
 					message = new StringBuilder();
 					string_count = 0;
 				}
@@ -261,7 +335,7 @@ public class Commander implements CommandExecutor {
 		}
 		
 		if (string_count > 0) {
-			sender.sendMessage("Entity Types: " + message.toString());
+			sender.sendMessage("MusterCull Entity Types: " + message.toString());
 			message = new StringBuilder();
 		}
 		
@@ -293,7 +367,7 @@ public class Commander implements CommandExecutor {
 			message.append(cullType.toString());
 			
 			if (string_count++ > 4) {
-				sender.sendMessage("Culling Types: " + message.toString());
+				sender.sendMessage("MusterCull Culling Types: " + message.toString());
 				message = new StringBuilder();
 				string_count = 0;
 			}
@@ -301,7 +375,7 @@ public class Commander implements CommandExecutor {
 		}
 		
 		if (string_count > 0) {
-			sender.sendMessage("Culling Types: " + message.toString());
+			sender.sendMessage("MusterCull Culling Types: " + message.toString());
 			message = new StringBuilder();
 		}
 		

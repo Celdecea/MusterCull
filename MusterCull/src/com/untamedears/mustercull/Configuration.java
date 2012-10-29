@@ -35,32 +35,40 @@ public class Configuration {
 	
 	/**
 	 * Whether or not we have limits with CullType DAMAGE.
+	 * 
+	 * This is used by the MusterCull class to determine if the tick laborer
+	 * needs to be started.
 	 */
 	private boolean hasDamageLimits = false;
 	
 	/**
-	 * Whether or not we have limits with CullType SPAWN.
+	 * Whether or not we have limits with CullTypes SPAWN or SPAWNER.
+	 * 
+	 * This is used by the MusterCull class to determine if the event listener
+	 * needs to be registered.
 	 */
 	private boolean hasSpawnLimits = false;
 	
 	/**
-	 * Number of ticks between calls to the chunk damage laborer. 
+	 * Number of ticks between calls to the chunk damage laborer.
 	 */
 	private long ticksBetweenDamage = 20L;
 	
+	/**
+	 * Number of entities to damage every time the damage laborer runs.
+	 */
+	private int damageCalls = 1;
 	
 	/**
 	 * Percent chance that a mob will be damaged when crowded.
 	 */
 	private int damageChance = 75;
 	
-	
 	/**
 	 * Holds a reference to the Bukkit JavaPlugin for this project 
 	 */
 	private JavaPlugin pluginInstance = null;
 	
-
 	/**
 	 * Constructor which stores a reference to the Bukkit JavaPlugin we are using.
 	 * @param plugin A reference to a Bukkit JavaPlugin.
@@ -68,9 +76,7 @@ public class Configuration {
 	Configuration(JavaPlugin plugin) {
 		this.pluginInstance = plugin; 
 	}
-	
-	
-	
+
 	/**
 	 * Loads configuration values from the supplied plug-in instance.
 	 * @param plugin A reference to the Bukkit plug-in to load from.
@@ -81,8 +87,9 @@ public class Configuration {
 		
 		this.setDamage(config.getInt("damage"));
 		this.setDamageChance(config.getInt("damage_chance"));
+		this.setDamageCalls(config.getInt("damage_count"));
 		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
-		
+						
 		List<?> list;
 				
 		list = config.getList("limits");
@@ -139,6 +146,7 @@ public class Configuration {
 		
 		config.set("damage", this.damage);
 		config.set("damage_chance", this.damageChance);
+		config.set("damage_count", this.damageCalls);
 		config.set("ticks_between_damage", this.ticksBetweenDamage);
 				
 		this.pluginInstance.saveConfig();
@@ -161,6 +169,11 @@ public class Configuration {
 	 * @param damage The amount of damage to apply to a crowded mob.
 	 */
 	public void setDamage(int damage) {
+		
+		if (damage <= 0) {
+			this.pluginInstance.getLogger().info("Warning: damage is <= 0, possibly wasting cpu cycles.");
+		}
+		
 		this.damage = damage;
 		this.dirty = true;
 	}
@@ -175,14 +188,16 @@ public class Configuration {
 	 */
 	public void setLimit(EntityType type, ConfigurationLimit limit) {
 		
-		if (limit.getCulling() == CullType.DAMAGE){
+		switch (limit.getCulling()) {
+		case DAMAGE:
 			this.hasDamageLimits = true;
+			break;
+		case SPAWN:
+		case SPAWNER:
+			this.hasSpawnLimits = true;
+			break;
 		}
 		
-		if (limit.getCulling() == CullType.SPAWN) {
-			this.hasSpawnLimits = true;
-		}
-
 		if (mobLimits.containsKey(type)) {
 			List<ConfigurationLimit> otherLimits = mobLimits.get(type);
 			
@@ -225,8 +240,8 @@ public class Configuration {
 
 
 	/**
-	 * Returns whether or not we have limits with CullType SPAWN.
-	 * @return Whether or not we have limits with CullType SPAWN.
+	 * Returns whether or not we have limits with CullType SPAWN or SPAWNER.
+	 * @return true if there are any mobs with SPAWN or SPAWNER CullTypes, otherwise false.
 	 */
 	public boolean hasSpawnLimits() {
 		return hasSpawnLimits;
@@ -235,12 +250,11 @@ public class Configuration {
 
 	/**
 	 * Returns whether or not we have limits with CullType DAMAGE.
-	 * @return Whether or not we have limits with CullType DAMAGE.
+	 * @return true if there are any mobs with DAMAGE CullType, otherwise false.
 	 */
 	public boolean hasDamageLimits() {
 		return hasDamageLimits;
 	}
-
 
 
 	/**
@@ -250,17 +264,46 @@ public class Configuration {
 	public long getTicksBetweenDamage() {
 		return ticksBetweenDamage;
 	}
-	
+
 	/**
 	 * Sets the number of ticks between calls to the damage laborer.
 	 * @param ticksBetweenDamage Number of ticks between calls to the damage laborer.
 	 */
 	public void setTicksBetweenDamage(long ticksBetweenDamage) {
+
 		this.pluginInstance.getLogger().info("MusterCull will damage something every " + ticksBetweenDamage + " ticks.");
+
+		if (ticksBetweenDamage < 20) {
+			this.pluginInstance.getLogger().info("Warning: ticks_between_damage is < 20, probably won't run that fast.");
+		}
+
 		this.ticksBetweenDamage = ticksBetweenDamage;
 		this.dirty = true;
 	}
-
+	
+	/**
+	 * Returns the number of entities to take damage each time the laborer is called.
+	 * @return Number of entities to take damage each time the laborer is called.
+	 */
+	public int getDamageCalls() {
+		return damageCalls;
+	}
+	
+	/**
+	 * Sets the number of entities to take damage each time the laborer is called. 
+	 * @param damageCalls Number of entities to take damage each time the laborer is called.
+	 */
+	public void setDamageCalls(int damageCalls) {
+		if (damageCalls <= 0) {
+			this.pluginInstance.getLogger().info("Warning: damage_count is <= 0, possibly wasting cpu cycles.");
+		}
+		else if (damageCalls > 5) {
+			this.pluginInstance.getLogger().info("Notice: damage_count is > 5, possibly killing performance.");
+		}
+		
+		this.damageCalls = damageCalls;
+		this.dirty = true;
+	}
 
 
 	/**
@@ -276,6 +319,13 @@ public class Configuration {
 	 * @param damageChange Percent chance that a mob will be damaged when crowded.
 	 */
 	public void setDamageChance(int damageChance) {
+		if (damageChance <= 0) {
+			this.pluginInstance.getLogger().info("Warning: damage_chance is <= 0, possibly wasting cpu cycles.");
+		}
+		else if (damageChance > 100) {
+			this.pluginInstance.getLogger().info("Notice: damage_chance is > 100 when 100 is the limit. Pedantry.");
+		}
+		
 		this.damageChance = damageChance;
 		this.dirty = true;
 	}

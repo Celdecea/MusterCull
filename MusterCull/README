@@ -1,19 +1,24 @@
 
-MusterCull v1.0 - A Bukkit plugin and Minecraft mob limiter.
+MusterCull v1.2 - A Bukkit plugin and Minecraft mob limiter.
 
 By Celdecea
 Found at https://github.com/Celdecea/MusterCull
 
+WARNING:
+
+    ** THIS PLUGIN CAN EMPTY EVERY PERSISTENT FARM ON YOUR SERVER
+    ** THIS PLUGIN CAN DISABLE GRINDERS AND SPAWNERS
+
+However, it won't do this without your configuration. Take your time and don't  
+cull what you don't need to. Carefully read these instructions; never point a
+gun you don't intend to shoot.
 
 DESCRIPTION:
 
-This mod allows mobs to be culled using one of two methods. The first method
-blocks mobs from spawning if there are already too many of that type in a
-configurable range. The second method randomly damages mobs if they are in
-an area with too many of that type.
-
-Spawn culling is useful for hostile mobs, spawners and grinders while damage
-culling is useful for persistent mobs like farm animals.
+This mod allows mobs to be culled using one of three methods (described
+below). Each mob and type is considered individually based on the combination
+of a hard limit and a bounding box range. Mobs which exceed the limit can
+be prevented from spawning or can be damaged.
 
 CONFIGURING:
 
@@ -21,50 +26,103 @@ Put the jar in plugins and create MusterCull/config.yml
 
 Add the following (you don't need START and END lines):
 #-- START -------------------------------------
+damage: 2
+damage_chance: 70
+ticks_per_damage: 20
 #limits:
 #- type: CREEPER
-#  limit: 20
 #  culling: SPAWN
-#  range: 100
+#  limit: 100
+#  range: 20
 #-- END ---------------------------------------
 
-Copy the four lines under limits: for each mob you want to cull. Remove the # from
-the beginning of each line, including limits:.
+The "limits:" block has four lines underneath. Copy these four lines for each
+mob type you want to cull. If you do this, remove the hash sign (#) from the
+beginning of each line, including the "limits:" line. Each block needs all
+four lines, and the first line must start with a dash and space while the 
+remaining three lines begin with two spaces.
 
-The fields are:
+If you want to cull a specific mob using multiple culling types (like SPAWN
+and SPAWNER), copy the block for that mob and change the "culling:" field. You
+can have one block per mob per cull type and duplicate handling is undefined.
 
-type:	The name of the entity to manage culling for. These are taken from Bukkit's
-		EntityType enumeration and are case sensitive (so use upper-case):
+With no limits, the plugin will just sit and wait for commands. A console
+message will indicate that there appears to be nothing to do.
+
+Field descriptions:
+
+damage_chance:  The percent chance a crowded mob (over limit) will take any
+                damage. Values of 70%-90% are normal.
+                
+damage:   The amount of damage to issue to a mob. Baby animals take double
+          damage.
+
+ticks_between_damage:  The amount of ticks to delay between calls to the mob
+                       damage laborer.
+
+damage_count:  The number of entities to damage each time the damage laborer
+               is ran.
+
+Limit fields:
+
+type:     The name of the entity to manage culling for. These are taken from
+          Bukkit's EntityType enumeration and are case sensitive (so use
+          upper-case):
 		
-			CREEPER			SKELETON		SPIDER
-			ZOMBIE			SLIME			GHAST
-			PIGZOMBIE		ENDERMAN		CAVESPIDER
-			SILVERFISH		BLAZE			LAVASLIME
-			ENDERDRAGON		PIG				SHEEP
-			COW				CHICKEN			SQUID
-			WOLF			MUSHROOMCOW		SNOWMAN
-			OZELOT			VILLAGERGOLEM	VILLAGER
+            CREEPER       SKELETON        SPIDER
+            ZOMBIE        SLIME           GHAST
+            PIGZOMBIE     ENDERMAN        CAVESPIDER
+            SILVERFISH    BLAZE           LAVASLIME
+            ENDERDRAGON   PIG             SHEEP
+            COW           CHICKEN         SQUID
+            WOLF          MUSHROOMCOW     SNOWMAN
+            OZELOT        VILLAGERGOLEM   VILLAGER
 
-limit:  The hard number of mobs of this type to limit in a certain area. If this is
-		zero or less, all mobs are culled.
+culling:  The method to use for culling the mob.
 
-culling:	The method to use for culling the mob. Currently only two methods exist,
-			SPAWN and DAMAGE.
+            SPAWN    Prevents mobs from spawning using an event listener.
+                     If a mob tries to spawn over the limit it is blocked.
+                     
+            SPAWNER  Variation of SPAWN for just mob spawning blocks, which
+                     are not considered under the SPAWN type. To cull all
+                     spawning, use both.
 
-				SPAWN		Prevents mobs from spawning using a Bukkit event listener.
-							If a mob tries to spawn over the limit it is blocked.
+            DAMAGE   A timed event damages mobs on an interval if they are in
+                     an area with too many of the same type. This can take
+                     time and have profound effects on the mob composition of
+                     a server, so use with care.
+                     
+limit:    The hard number of mobs of this type to limit in a certain area. If
+          this is zero or less, all mobs are culled.
 
-				DAMAGE		Mobs are damaged if crowded. A timed event damages mobs on
-							an interval if they are in an area with too many of that
-							type.
+range:    The distance from the mob to check. If this value is zero or less,
+          no checking is performed and cycles are wasted, so comment out
+          unused limits from this file.
 
-range:	The distance from the mob to check. If this value is zero or less, no checking
-		is performed and cycles are wasted, so comment out unused limits from this file.
+COMMANDS:
 
+Help for these commands is available using bukkit's chat help system.
 
-PLANNED STUFF:
+At this time, all commands require server op status to use. A better system
+is planned for the future.
 
-Commands to do some of this stuff live and manipulate the configs and some
-way to configure notifications.
+          /mustercull - Control the plugin including pause and reset.
+          /mustercullstatus - Stats including most crowded players.
+          /mculltypes - List types of culling that can be performed.
+          /mcullentities - List entities which can be culled.
+          /mculllimit - Make session changes to the culling table.
+          /muster - Damage mob types around self or specific player.
+          /cull - Kill mob types around self or specific player.
+          
+SUGGESTIONS:
 
- 
+Start with hostile mobs so you don't lose your farms, and set the limit to
+something high (like 50 or even 100) and set the range to something low, like
+10 or 5. You can then drop the limit or increase the range to values over time
+to those which balance well with your server.
+
+Test on creepers! They don't come out of spawners and nobody cares if you kill
+them off.
+
+Keep ticks_between_damage a minimum and multiple of the server average tick
+rate (like 20). Keep damage_count low (1 or 2 and no more than 5).

@@ -16,7 +16,7 @@ public class Laborer implements Runnable {
 	 * Buffer for a reference to the main plug-in class.
 	 */
 	private MusterCull pluginInstance = null;
-	
+
 	
 	/**
 	 * Constructor which takes a reference to the main plug-in class.
@@ -35,43 +35,48 @@ public class Laborer implements Runnable {
 		if (this.pluginInstance.isPaused(CullType.DAMAGE)) {
 			return;
 		}
+
+		int damage_calls = this.pluginInstance.getDamageCalls();
 		
-		EntityLimitPair entityLimitPair = this.pluginInstance.getNextEntity();
-		
-		if (entityLimitPair == null) {
-			return;
-		}
-		
-		Entity entity = entityLimitPair.getEntity();
-		
-		if (entity == null || entity.isDead()) {
-			return;
-		}
-		
-		ConfigurationLimit limit = entityLimitPair.getLimit();
-		
-		if (limit.getCulling() != CullType.DAMAGE) {
-			return;
-		}
-		
-		Random random = new Random();
-		
-		// Loop through entities in range and count similar entities.
-		int count = 0;
-		
-		for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange(), limit.getRange())) {
-			if (0 == otherEntity.getType().compareTo(entity.getType())) {
-				
-				count += 1;
-				
-				// If we've reached a limit for this entity, go ahead and damage it.
-				if (count >= limit.getLimit()) {
+		for (int i = 0; i < damage_calls; i++)
+		{
+			EntityLimitPair entityLimitPair = this.pluginInstance.getNextEntity();
+			
+			if (entityLimitPair == null) {
+				return;
+			}
+			
+			Entity entity = entityLimitPair.getEntity();
+			
+			if (entity == null || entity.isDead()) {
+				return;
+			}
+			
+			ConfigurationLimit limit = entityLimitPair.getLimit();
+			
+			if (limit.getCulling() != CullType.DAMAGE) {
+				return;
+			}
+			
+			Random random = new Random();
+			
+			// Loop through entities in range and count similar entities.
+			int count = 0;
+			
+			for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange(), limit.getRange())) {
+				if (0 == otherEntity.getType().compareTo(entity.getType())) {
 					
-					if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
-						this.pluginInstance.damageEntity(entity, this.pluginInstance.getDamage());
+					count += 1;
+					
+					// If we've reached a limit for this entity, go ahead and damage it.
+					if (count >= limit.getLimit()) {
+						
+						if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
+							this.pluginInstance.damageEntity(entity, this.pluginInstance.getDamage());
+						}
+						
+						return;
 					}
-					
-					return;
 				}
 			}
 		}
