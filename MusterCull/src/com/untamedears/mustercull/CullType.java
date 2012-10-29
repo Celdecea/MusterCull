@@ -23,16 +23,14 @@ enum CullType {
 	
 	/**
 	 * Returns a CullType representing the name provided.
-	 * @param name A case-sensitive name to compare to.
-	 * @return The CullType representing the name provided.
+	 * @param name A case-insensitive name to compare to.
+	 * @return The CullType representing the name provided, or null.
 	 */
 	public static CullType fromName(String name) {
 		
 		if (name == null) {
 			return null;
 		}
-		
-		name = name.trim();
 		
 		for (CullType culling : values()) {
 			if (0 == name.compareToIgnoreCase(culling.name())) {
