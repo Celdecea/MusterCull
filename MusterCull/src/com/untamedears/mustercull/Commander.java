@@ -186,6 +186,10 @@ public class Commander implements CommandExecutor {
 			
 			sender.sendMessage("MusterCull: setting damage chance count to " + chance + ".");
 		}
+		else if (argv[0].compareToIgnoreCase("save") == 0) {
+			sender.sendMessage("MusterCull: attempting to save the config file...");
+			this.pluginInstance.forceConfigSave();
+		}
 		else {
 			return false;
 		}

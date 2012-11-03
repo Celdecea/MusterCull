@@ -112,3 +112,7 @@ damage_chance: 75
 # The number of ticks between invocations of the damage method for mobs.
 ticks_between_damage: 10
 
+# The number of entities to damage each round of the laborer.
+damage_count: 1
+
+

@@ -22,6 +22,7 @@ commands:
       /mcull damage //sets the damage for the tick laborer
       /mcull count //sets the number of mobs to damage during the tick laborer run
       /mcull chance //sets the chance a mob will be damaged during tick laborer run
+      /mcull save //forces configuration save
   muster:
     description: Damages entities of a type surrounding the player.
     permission: mustercull.*

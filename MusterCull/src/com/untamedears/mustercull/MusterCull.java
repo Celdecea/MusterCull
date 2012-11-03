@@ -484,5 +484,12 @@ public class MusterCull extends JavaPlugin {
 			return this.pausedCullTypes.contains(cullType);
 		}
 	}
+	
+	/**
+	 * Forces the local configuration file to save.
+	 */
+	public void forceConfigSave() {
+		this.config.save();
+	}
 
 }
