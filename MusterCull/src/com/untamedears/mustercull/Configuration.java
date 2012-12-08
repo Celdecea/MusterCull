@@ -65,6 +65,16 @@ public class Configuration {
 	private int damageChance = 75;
 	
 	/**
+	 * Hard number of limit on mobs before the damage laborer cares to run.
+	 */
+	private int mobLimit = 500;
+	
+	/**
+	 * Percentage of mobLimit each mob must be to trigger damage culling
+	 */
+	private int mobLimitPercent = 20;
+	
+	/**
 	 * Holds a reference to the Bukkit JavaPlugin for this project 
 	 */
 	private JavaPlugin pluginInstance = null;
@@ -89,6 +99,8 @@ public class Configuration {
 		this.setDamageChance(config.getInt("damage_chance"));
 		this.setDamageCalls(config.getInt("damage_count"));
 		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
+		this.setMobLimit(config.getInt("mob_limit"));
+		this.setMobLimitPercent(config.getInt("mob_limit_percent"));
 						
 		List<?> list;
 				
@@ -148,6 +160,8 @@ public class Configuration {
 		config.set("damage_chance", this.damageChance);
 		config.set("damage_count", this.damageCalls);
 		config.set("ticks_between_damage", this.ticksBetweenDamage);
+		config.set("mob_limit", this.mobLimit);
+		config.set("mob_limit_percent", this.mobLimitPercent);
 				
 		this.pluginInstance.saveConfig();
 		
@@ -327,6 +341,58 @@ public class Configuration {
 		}
 		
 		this.damageChance = damageChance;
+		this.dirty = true;
+	}
+	
+	/**
+	 * Returns the limit on mobs before the damage laborer cares to act.
+	 * @return The limit on mobs before the damage laborer cares to act.
+	 */
+	public int getMobLimit() {
+		return this.mobLimit;
+	}
+	
+	/**
+	 * Sets the limit on mobs before the damage laborer cares to act.
+	 * @param mobLimit The limit on mobs before the damage laborer cares to act.
+	 */
+	public void setMobLimit(int mobLimit) {
+
+		if (mobLimit < 0) {
+			this.pluginInstance.getLogger().info("Warning: mob_limit is < 0 when 0 is the limit. Pedantry.");
+		}
+		
+		if (mobLimit > 5000) {
+			this.pluginInstance.getLogger().info("Warning: mob_limit is > 5000. Damage laborer may never run.");
+		}
+		
+		this.mobLimit = mobLimit;
+		this.dirty = true;
+	}
+	
+	/**
+	 * Returns the percent part per total before the damage laborer queues mobs.
+	 * @return The percent part per total before the damage laborer queues mobs.
+	 */
+	public int getMobLimitPercent() {
+		return this.mobLimitPercent;
+	}
+	
+	/**
+	 * Sets the percent part per total before the damage laborer queues mobs.
+	 * @param mobLimitPercent The percent part per total before the damage laborer queues mobs.
+	 */
+	public void setMobLimitPercent(int mobLimitPercent) {
+
+		if (mobLimitPercent < 0) {
+			this.pluginInstance.getLogger().info("Warning: mob_limit_percent is < 0 when 0 is the limit. Pedantry.");
+		}
+		
+		if (mobLimitPercent > 100) {
+			this.pluginInstance.getLogger().info("Warning: mob_limit_percent is > 100 when 100 is the limit. Pedantry.");
+		}
+		
+		this.mobLimitPercent = mobLimitPercent;
 		this.dirty = true;
 	}
 }

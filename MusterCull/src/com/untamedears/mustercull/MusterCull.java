@@ -2,8 +2,10 @@ package com.untamedears.mustercull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -41,11 +43,11 @@ public class MusterCull extends JavaPlugin {
 	 * Whether or not we are returning a new entity to process (concurrency protection) 
 	 */
 	private boolean returningKnownEntity = false;
-	
+
 	/**
-	 * Buffer for keeping track of the parallel Laborer task.
+	 * Buffer for keeping track of the parallel Laborer task for the DAMAGE method.
 	 */
-	private int laborTask = -1;
+	private int damageLaborTask = -1;
 	
 	/**
 	 * Buffer for holding configuration information for this plug-in.
@@ -65,22 +67,13 @@ public class MusterCull extends JavaPlugin {
 		this.config = new Configuration(this);
 		this.config.load();
         
-		if (this.config.hasDamageLimits()) {
-			
-			this.laborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Laborer(this), this.config.getTicksBetweenDamage(), this.config.getTicksBetweenDamage());
+		this.damageLaborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new DamageLaborer(this), this.config.getTicksBetweenDamage(), this.config.getTicksBetweenDamage());
 
-			if (this.laborTask == -1) {
-				getLogger().severe("Failed to start MusterCull laborer.");
-			}	
-		}
+		if (this.damageLaborTask == -1) {
+			getLogger().severe("Failed to start MusterCull DAMAGE laborer.");
+		}	
 		
-		if (this.config.hasSpawnLimits() || this.config.hasDamageLimits()) {
-			getServer().getPluginManager().registerEvents(new EntityListener(this), this);
-		}
-		else {
-			getLogger().info("MusterCull doesn't appear to have anything to do.");
-		}
-		
+		getServer().getPluginManager().registerEvents(new EntityListener(this), this);
 		Commander commander = new Commander(this);
 		
 		for (String command : getDescription().getCommands().keySet()) {
@@ -92,18 +85,12 @@ public class MusterCull extends JavaPlugin {
 	 * Called when the plug-in is disabled by Bukkit.
 	 */
     public void onDisable() { 
-    	if (this.laborTask != -1) {
-    		getServer().getScheduler().cancelTask(this.laborTask);
+    	if (this.damageLaborTask != -1) {
+    		getServer().getScheduler().cancelTask(this.damageLaborTask);
     	}
-    	
+
     	this.config.save();
     }
-
-    
-    
-    
-    
-    
 
     /**
      * Return a limit from the config file for the provided entityType.
@@ -127,7 +114,6 @@ public class MusterCull extends JavaPlugin {
     	return null;
     }
 
-
 	/**
 	 * Sets the ConfigurationLimit for the specified mob type. Don't add 
 	 * limits you don't need.
@@ -139,9 +125,6 @@ public class MusterCull extends JavaPlugin {
 		this.config.setLimit(type, limit);
 	}
 	
-    
-    
-	
 	/**
 	 * Returns whether or not we have limits with CullType DAMAGE.
 	 * @return Whether or not we have limits with CullType DAMAGE.
@@ -149,7 +132,6 @@ public class MusterCull extends JavaPlugin {
 	public boolean hasDamageLimits() {
 		return this.config.hasDamageLimits();
 	}
-	
 	
 	/**
 	 * Returns whether or not we have limits with CullType SPAWN.
@@ -196,16 +178,55 @@ public class MusterCull extends JavaPlugin {
 			this.knownEntitiesRemaining = 0;
 			this.knownEntities.clear();
 			
+			Map<EntityType, List<Entity>> sortedEntities = new HashMap<EntityType, List<Entity>>();
+			int totalEntities = 0;
+			
 			for (World world : getServer().getWorlds()) {
-				for (Entity entity : world.getEntities()) {
-					ConfigurationLimit limit = this.getLimit(entity.getType(), CullType.DAMAGE);
+				
+				List<Entity> entities = world.getEntities();
+				totalEntities += entities.size();
+				
+				for (Entity entity : entities) {
+					List<Entity> knownEntities = sortedEntities.get(entity.getType());
 					
-					if (limit != null) {
-						this.knownEntities.push(new EntityLimitPair(entity, limit));
-						this.knownEntitiesRemaining++;
+					if (knownEntities == null) {
+						knownEntities = new ArrayList<Entity>();
+						sortedEntities.put(entity.getType(), knownEntities);
+					}
+					
+					knownEntities.add(entity);
+				}
+			}
+			
+			if (totalEntities < this.config.getMobLimit()) {
+				synchronized(this.knownEntities) {
+					this.returningKnownEntity = false;
+					return null;
+				}
+			}
+			
+			float mobLimitPercent = ((float)this.config.getMobLimitPercent()) / 100.0f;
+			
+			Stack<EntityLimitPair> newEntities = new Stack<EntityLimitPair>();
+			
+			for (Map.Entry<EntityType, List<Entity>> entries : sortedEntities.entrySet()) {
+				ConfigurationLimit limit = this.getLimit(entries.getKey(), CullType.DAMAGE);
+				
+				if (limit == null) {
+					continue;
+				}
+				
+				List<Entity> values = entries.getValue();
+				
+				if (((float)values.size()) / ((float)totalEntities) >= mobLimitPercent) {
+					for (Entity entity : entries.getValue()) {
+						newEntities.push(new EntityLimitPair(entity, limit));
 					}
 				}
 			}
+			
+			this.knownEntities = newEntities;
+			this.knownEntitiesRemaining = this.knownEntities.size();
 			
 			getLogger().info("Grabbed " + this.knownEntitiesRemaining + " entities this round.");
 		}
@@ -219,8 +240,6 @@ public class MusterCull extends JavaPlugin {
 			return entityLimitPair;
 		}
 	}
-	
-	
 	
 	/**
 	 * Returns information about mobs surrounding players
@@ -240,13 +259,6 @@ public class MusterCull extends JavaPlugin {
 		Collections.reverse(stats);
 		return stats;
 	}
-	
-	
-	
-	
-	
-	
-	
 	
 	/**
 	 * Returns the percent chance that a mob will be damaged when crowded.
@@ -314,8 +326,6 @@ public class MusterCull extends JavaPlugin {
 		}
 	}
 
-
-
 	/**
 	 * Returns nearby entities to a player by name.
 	 * @param playerName The name of a player to look up
@@ -366,8 +376,6 @@ public class MusterCull extends JavaPlugin {
 		return count;
 	}
 	
-	
-	
 	/**
 	 * Causes a specified amount of damage to an entity, doubled for baby animals.
 	 * @param entity The bukkit entity to cause damage to
@@ -379,13 +387,16 @@ public class MusterCull extends JavaPlugin {
 			Ageable agingEntity = (Ageable)entity;
 			
 			if (agingEntity.isAdult()) {
+				getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + damage + " point(s).");
 				agingEntity.damage(damage);
 			}
 			else {
+				getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + (2 * damage) + " point(s).");
 				agingEntity.damage(2 * damage);
 			}
 		}
 		else if (LivingEntity.class.isAssignableFrom(entity.getClass())) {
+			getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + damage + " point(s).");
 			LivingEntity livingEntity = (LivingEntity)entity;
 			livingEntity.damage(damage);
 		}
@@ -404,9 +415,14 @@ public class MusterCull extends JavaPlugin {
 	 * @return Whether the entity check was successful (i.e. we need to damage/kill something)
 	 */
 	public boolean runEntityChecks(Entity entity, ConfigurationLimit limit) {
-			
+		
+		if (limit == null) {
+			return false;
+		}
+		
 		// If the limit is 0, prevent all of this entity type from spawning 
 		if (limit.getLimit() <= 0) {
+			getLogger().info("Cancelling spawn for " + entity.toString() + " at " + entity.getLocation().toString() + " (method: " + limit.getCulling().toString() + ")");
 			return true;
 		}
 		
@@ -419,6 +435,7 @@ public class MusterCull extends JavaPlugin {
 				
 				// If we've reached a limit for this entity, prevent it from spawning.
 				if (count >= limit.getLimit()) {
+					getLogger().info("Cancelling spawn for " + entity.toString() + " at " + entity.getLocation().toString() + " (method: " + limit.getCulling().toString() + ")");
 					return true;
 				}
 			}
@@ -426,9 +443,6 @@ public class MusterCull extends JavaPlugin {
 		
 		return false;
 	}
-	
-	
-	
 
 	/**
 	 * Pauses all culling.

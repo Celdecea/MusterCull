@@ -1,16 +1,12 @@
 package com.untamedears.mustercull;
 
-import java.util.Random;
-
-import org.bukkit.entity.Entity;
-
 /**
- * This class handles routinely dealing damage to chunks.
+ * This class handles routinely dealing damage to mobs.
  * 
  * @author Celdecea
  *
  */
-public class Laborer implements Runnable {
+public abstract class Laborer implements Runnable {
 
 	/**
 	 * Buffer for a reference to the main plug-in class.
@@ -23,66 +19,24 @@ public class Laborer implements Runnable {
 	 * @param pluginInstance A reference to the main plug-in class.
 	 */
 	public Laborer(MusterCull pluginInstance) {
-		this.pluginInstance = pluginInstance;
+		this.setPluginInstance(pluginInstance);
 	}
 	
 	/**
-	 * Repeating damage method for the class.
+	 * Access method for the pluginInstance property.
+	 * @return The value of the pluginInstance property.
 	 */
-	@Override
-	public void run() {
-		
-		if (this.pluginInstance.isPaused(CullType.DAMAGE)) {
-			return;
-		}
-
-		int damage_calls = this.pluginInstance.getDamageCalls();
-		
-		for (int i = 0; i < damage_calls; i++)
-		{
-			EntityLimitPair entityLimitPair = this.pluginInstance.getNextEntity();
-			
-			if (entityLimitPair == null) {
-				return;
-			}
-			
-			Entity entity = entityLimitPair.getEntity();
-			
-			if (entity == null || entity.isDead()) {
-				return;
-			}
-			
-			ConfigurationLimit limit = entityLimitPair.getLimit();
-			
-			if (limit.getCulling() != CullType.DAMAGE) {
-				return;
-			}
-			
-			Random random = new Random();
-			
-			// Loop through entities in range and count similar entities.
-			int count = 0;
-			
-			for (Entity otherEntity : entity.getNearbyEntities(limit.getRange(), limit.getRange(), limit.getRange())) {
-				if (0 == otherEntity.getType().compareTo(entity.getType())) {
-					
-					count += 1;
-					
-					// If we've reached a limit for this entity, go ahead and damage it.
-					if (count >= limit.getLimit()) {
-						
-						if (random.nextInt(100) < this.pluginInstance.getDamageChance()) {
-							this.pluginInstance.damageEntity(entity, this.pluginInstance.getDamage());
-						}
-						
-						return;
-					}
-				}
-			}
-		}
+	public MusterCull getPluginInstance() {
+		return pluginInstance;
 	}
-	
 
-	
+	/**
+	 * Mutate method for the pluginInstance property.
+	 * @param pluginInstance The new value for the pluginInstance property.
+	 */
+	public void setPluginInstance(MusterCull pluginInstance) {
+		this.pluginInstance = pluginInstance;
+	}
+
 	
 }

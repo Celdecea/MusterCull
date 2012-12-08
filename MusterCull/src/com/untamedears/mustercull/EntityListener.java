@@ -37,18 +37,20 @@ public class EntityListener extends Listener {
 				limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWNER);
 				
 				if (limit != null) {
-					event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
+					event.setCancelled(this.getPluginInstance().runEntityChecks(entity, limit));
 					return;
 				}	
 			}
 		}
 		
 		if (!this.getPluginInstance().isPaused(CullType.SPAWN)) {
-			limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWN);
-			
-			if (limit != null) {
-				event.setCancelled(this.getPluginInstance().runEntityChecks(event.getEntity(), limit));
-				return;
+			if (event.getSpawnReason() != SpawnReason.SPAWNER) {
+				limit = this.getPluginInstance().getLimit(entity.getType(), CullType.SPAWN);
+				
+				if (limit != null) {
+					event.setCancelled(this.getPluginInstance().runEntityChecks(entity, limit));
+					return;
+				}
 			}
 		}
 	}
