@@ -4,7 +4,7 @@
 #
 name: MusterCull
 main: com.untamedears.mustercull.MusterCull
-version: 1.2
+version: 1.3
 description: Removes persistent mobs due to overcrowding and other purposes.
 author: Celdecea
 commands:
