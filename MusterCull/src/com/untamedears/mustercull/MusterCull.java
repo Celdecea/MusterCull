@@ -227,8 +227,6 @@ public class MusterCull extends JavaPlugin {
 			
 			this.knownEntities = newEntities;
 			this.knownEntitiesRemaining = this.knownEntities.size();
-			
-			getLogger().info("Grabbed " + this.knownEntitiesRemaining + " entities this round.");
 		}
 		else {
 			entityLimitPair = this.knownEntities.pop();
