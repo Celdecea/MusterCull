@@ -1,6 +1,7 @@
 package com.untamedears.mustercull;
 
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -27,6 +28,17 @@ public class EntityListener extends Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true)
 	public void onCreatureSpawn(CreatureSpawnEvent event) {
+		
+		/* TODO Will this prevent player spawning? */
+		/* If over hard mob limit, stop all mob spawning.
+		 * This entity isn't included in overHardMobLimit so account for this. */
+		if (this.getPluginInstance().overHardMobLimit() + 1 > 0) {
+			/* Always let a player join. */
+			if (! (event.getEntity() instanceof Player)) {
+				event.setCancelled(true);
+				return;
+			}
+		}
 		
 		Entity entity = event.getEntity();
 		ConfigurationLimit limit = null;

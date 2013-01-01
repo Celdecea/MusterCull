@@ -75,6 +75,16 @@ public class Configuration {
 	private int mobLimitPercent = 20;
 	
 	/**
+	 * The hard mob limit. Also however many mobs can exist with no players.
+	 */
+	private int maxMob = 10000;
+	
+	/**
+	 * How many mobs permitted less of the maximum, per player.
+	 */
+	private int playerMultiplier = 5;
+	
+	/**
 	 * Holds a reference to the Bukkit JavaPlugin for this project 
 	 */
 	private JavaPlugin pluginInstance = null;
@@ -101,6 +111,8 @@ public class Configuration {
 		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
 		this.setMobLimit(config.getInt("mob_limit"));
 		this.setMobLimitPercent(config.getInt("mob_limit_percent"));
+		this.setMaxMob(config.getInt("mob_max_mob"));
+		this.setPlayerMultiplier(config.getInt("mob_player_multiplier"));
 						
 		List<?> list;
 				
@@ -162,6 +174,8 @@ public class Configuration {
 		config.set("ticks_between_damage", this.ticksBetweenDamage);
 		config.set("mob_limit", this.mobLimit);
 		config.set("mob_limit_percent", this.mobLimitPercent);
+		config.set("mob_max_mob", this.maxMob);
+		config.set("mob_player_multiplier", this.playerMultiplier);
 				
 		this.pluginInstance.saveConfig();
 		
@@ -395,4 +409,47 @@ public class Configuration {
 		this.mobLimitPercent = mobLimitPercent;
 		this.dirty = true;
 	}
+	
+	/**
+	 * Returns the hard mob cap.
+	 * @return The hard mob cap.
+	 */
+	public int getMaxMob(){
+		return this.maxMob;
+	}
+	
+	/**
+	 * Sets the hard mob cap.
+	 * @param maxMob The hard mob cap.
+	 */
+	public void setMaxMob(int maxMob) {
+		if (maxMob < 0) {
+			this.pluginInstance.getLogger().info("Warning: maxMob is < 0 when 0 is the limit. Pedantry.");
+		}
+		
+		this.maxMob = maxMob;
+		this.dirty = true;
+	}
+	
+	/**
+	 * Returns how many mobs permitted less of the maximum, per player.
+	 * @return How many mobs permitted less of the maximum, per player.
+	 */
+	public int getPlayerMultiplier(){
+		return this.playerMultiplier;
+	}
+	
+	/**
+	 * Sets how many mobs permitted less of the maximum, per player.
+	 * @param playerMultiplier How many mobs permitted less of the maximum, per player.
+	 */
+	public void setPlayerMultiplier(int playerMultiplier) {
+		if (playerMultiplier < 0) {
+			this.pluginInstance.getLogger().info("Warning: playerMultiplier is < 0 when 0 is the limit. Pedantry.");
+		}
+		
+		this.playerMultiplier = playerMultiplier;
+		this.dirty = true;
+	}
+	
 }

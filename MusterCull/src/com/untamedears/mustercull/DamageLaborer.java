@@ -1,8 +1,10 @@
 package com.untamedears.mustercull;
 
+import java.util.List;
 import java.util.Random;
 
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 
 /**
  * This class performs damage to mobs using the DAMAGE CullType.
@@ -24,6 +26,32 @@ public class DamageLaborer extends Laborer {
 	 */
 	@Override
 	public void run() {
+		
+		int overHardMobLimit = this.getPluginInstance().overHardMobLimit();
+		
+		if (overHardMobLimit > 0) {
+			
+			List<LivingEntity> mobs = this.getPluginInstance().getMobs();
+			
+			Random random = new Random();
+			int mobcount = mobs.size();
+			int toKillIndex;
+			Entity mob;
+			
+			for (int c = overHardMobLimit; c > 0; c--) {
+				//TODO It might be better to produce a smaller list randomly then kill everything in it
+				if (mobcount <= 0) break;
+				toKillIndex = random.nextInt(mobcount);
+				mobcount--;
+				mob = mobs.get(toKillIndex);
+				mobs.remove(toKillIndex);
+				
+				/*XXX could entity be null or dead here? possible bug!*/
+				/*XXX What is max entity hp? That's what I mean by "100". */
+				this.getPluginInstance().damageEntity(mob, 100);
+			}
+			
+		}
 		
 		if (this.getPluginInstance().isPaused(CullType.DAMAGE)) {
 			return;

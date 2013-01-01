@@ -51,6 +51,20 @@ commands:
       Examples:
       * /mculllimit SPAWN CREEPER 16 64
       * /mculllimit DAMAGE SHEEP 16 32
+  mcullhardlimit:
+    description: Modifies the hard mob limit.
+    aliases: [mustercullhardlimit]
+    permission: mustercull.*
+    usage: |
+      /mcullhardlimit TYPE LIMIT
+      Where:
+      * TYPE is either MAXMOB or PMULTI
+        * MAXMOB is the maximum number of mobs in the world
+        * PMULTI is how many mobs less MAXMOB, per player
+      * LIMIT is a non-negative integer
+      Examples:
+      * /mcullhardlimit MAXMOB 10000
+      * /mcullhardlimit PMULTI 5
   mcullentities:
     description: Shows the entities supported by MusterCull.
     aliases: [mustercullentities]

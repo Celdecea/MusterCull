@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Collections2;
+import com.google.common.base.Predicate;
+
 import org.bukkit.World;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
@@ -16,6 +20,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.google.common.base.Predicates;
 
 /**
  * This is the main class for the MusterCull Bukkit plug-in.
@@ -141,10 +147,75 @@ public class MusterCull extends JavaPlugin {
 		return this.config.hasSpawnLimits();
 	}
 	
+	/**
+	 * Returns the hard mob limit.
+	 * @return The hard mob limit. 
+	 */
+	public int getMaxMob() {
+		return this.config.getMaxMob();
+	}
 	
+	/**
+	 * Sets the hard mob limit.
+	 * @param the hard mob limit.
+	 */
+	public void setMaxMob(int limit) {
+		this.config.setMaxMob(limit);
+	}
 	
+	/**
+	 * Returns how many mobs permitted less of the maximum, per player.
+	 * @return How many mobs permitted less of the maximum, per player.
+	 */
+	public int getPlayerMultiplier() {
+		return this.config.getPlayerMultiplier();
+	}
 	
+	/**
+	 * Sets the player multiplier for the hard mob limit.
+	 * @param the player multiplier for the hard mob limit.
+	 */
+	public void setPlayerMultiplier(int value) {
+		this.config.setPlayerMultiplier(value);
+	}
 	
+	/**
+	 * Returns how much current mob count is over mob limit.
+	 * @return how much current mob count is over mob limit.
+	 */
+	public int overHardMobLimit() {
+		
+		int hardLimit = this.getMaxMob();
+		int lessHardLimit = this.getPlayerMultiplier() * this.getServer().getOnlinePlayers().length;
+		int currentLimit = hardLimit - lessHardLimit;
+		int totalMobs = this.getMobs().size();
+		
+		return totalMobs - currentLimit;
+	}
+	
+	/**
+	 * Returns list of non-player living entities.
+	 * @return list of non-player living entities.
+	 */
+	public List<LivingEntity> getMobs() {
+		
+		List<LivingEntity> entities = new ArrayList<LivingEntity>();
+		
+		for (World world : getServer().getWorlds()) {
+			entities.addAll(world.getLivingEntities());
+		}
+		
+		Predicate<LivingEntity> isAlive = new Predicate<LivingEntity>() {
+		      @Override public boolean apply(LivingEntity mob) {
+		    	  return !mob.isDead();
+		      }
+		};
+		
+		List<LivingEntity> justMobs = Lists.newArrayList(Collections2.filter(entities, Predicates.and(Predicates.not(Predicates.instanceOf(Player.class)),
+																									  isAlive)));
+		
+		return justMobs;
+	}
 	
 	/**
 	 * Returns the next entity for monitoring.
