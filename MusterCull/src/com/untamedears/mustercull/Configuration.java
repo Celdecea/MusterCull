@@ -1,13 +1,10 @@
 package com.untamedears.mustercull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.*;
 
 
 /**
@@ -83,6 +80,11 @@ public class Configuration {
 	 * How many mobs permitted less of the maximum, per player.
 	 */
 	private int playerMultiplier = 5;
+
+    /**
+     * Number of ticks between calls to the living entity hard cap (HardCapLaborer).
+     */
+    private long ticksBetweenHardCap = 40L;
 	
 	/**
 	 * Holds a reference to the Bukkit JavaPlugin for this project 
@@ -99,7 +101,6 @@ public class Configuration {
 
 	/**
 	 * Loads configuration values from the supplied plug-in instance.
-	 * @param plugin A reference to the Bukkit plug-in to load from.
 	 */
 	public void load() {
 		
@@ -113,6 +114,7 @@ public class Configuration {
 		this.setMobLimitPercent(config.getInt("mob_limit_percent"));
 		this.setMaxMob(config.getInt("mob_max_mob"));
 		this.setPlayerMultiplier(config.getInt("mob_player_multiplier"));
+        this.setTicksBetweenHardCap(config.getInt("ticks_between_hard_cap"));
 						
 		List<?> list;
 				
@@ -158,7 +160,6 @@ public class Configuration {
 
 	/**
 	 * Saves configuration values to the supplied plug-in instance.
-	 * @param plugin  A reference to the Bukkit plug-in to save to.
 	 */
 	public void save() {
 		
@@ -176,6 +177,7 @@ public class Configuration {
 		config.set("mob_limit_percent", this.mobLimitPercent);
 		config.set("mob_max_mob", this.maxMob);
 		config.set("mob_player_multiplier", this.playerMultiplier);
+        config.set("ticks_between_hard_cap", this.ticksBetweenHardCap);
 				
 		this.pluginInstance.saveConfig();
 		
@@ -344,7 +346,7 @@ public class Configuration {
 	
 	/**
 	 * Sets the percent chance that a mob will be damaged when crowded.
-	 * @param damageChange Percent chance that a mob will be damaged when crowded.
+	 * @param damageChance Percent chance that a mob will be damaged when crowded.
 	 */
 	public void setDamageChance(int damageChance) {
 		if (damageChance <= 0) {
@@ -451,5 +453,29 @@ public class Configuration {
 		this.playerMultiplier = playerMultiplier;
 		this.dirty = true;
 	}
+
+    /**
+     * Returns number of ticks between calls to the hard cap laborer.
+     * @return number of ticks between calls to the hard cap laborer.
+     */
+    public long getTicksBetweenHardCap(){
+        return ticksBetweenHardCap;
+    }
+
+    /**
+     * Sets the number of ticks between calls to the hard cap laborer.
+     * @param ticksBetween Number of ticks between calls to the damage laborer.
+     */
+    public void setTicksBetweenHardCap(long ticksBetween) {
+
+        pluginInstance.getLogger().info("MusterCull will kill something every " + ticksBetween + " ticks.");
+
+        if (ticksBetweenDamage < 25) {
+            pluginInstance.getLogger().warning("ticks_between_hard_cap is < 25, might bug out and kill everything.");
+        }
+
+        ticksBetweenHardCap = ticksBetween;
+        dirty = true;
+    }
 	
 }

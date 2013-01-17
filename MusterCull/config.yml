@@ -115,4 +115,13 @@ ticks_between_damage: 10
 # The number of entities to damage each round of the laborer.
 damage_count: 1
 
+# The maximum number of living entities allowed to be loaded.
+mob_max_mob: 10000
+
+# mob_player_multiplier is multiplied by the number of online players.
+# This number of how much smaller the mob cap is than mob_max_mob.
+mob_player_multiplier: 5
+
+# The number of ticks between invocations of the hardcap laborer for mobs.
+ticks_between_hard_cap: 40
 

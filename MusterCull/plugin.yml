@@ -17,6 +17,7 @@ commands:
       /mcull continue //continues all culling types
       You can specify a culling type to pause only specific areas of the plugin:
       /mcull pause spawner //pauses spawner culling
+      /mcull pause hard_cap_laborer //pauses the culling of mobs over the global mob cap
       Use /mculltypes to see which culling types can be paused.
       /mcull reset //clears the damage list (not very safe!)
       /mcull damage //sets the damage for the tick laborer
@@ -56,12 +57,12 @@ commands:
     aliases: [mustercullhardlimit]
     permission: mustercull.*
     usage: |
-      /mcullhardlimit TYPE LIMIT
+      /mcullhardlimit TYPE VALUE
       Where:
-      * TYPE is either MAXMOB or PMULTI
+      * TYPE is either MAXMO or PMULTI
         * MAXMOB is the maximum number of mobs in the world
         * PMULTI is how many mobs less MAXMOB, per player
-      * LIMIT is a non-negative integer
+      * VALUE is a non-negative integer
       Examples:
       * /mcullhardlimit MAXMOB 10000
       * /mcullhardlimit PMULTI 5

@@ -28,11 +28,10 @@ public class EntityListener extends Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true)
 	public void onCreatureSpawn(CreatureSpawnEvent event) {
-		
-		/* TODO Will this prevent player spawning? */
+
 		/* If over hard mob limit, stop all mob spawning.
-		 * This entity isn't included in overHardMobLimit so account for this. */
-		if (this.getPluginInstance().overHardMobLimit() + 1 > 0) {
+		 * The entity in this event isn't included in overHardMobLimit so account for this. */
+		if (getPluginInstance().overHardMobLimit() + 1 > 0) {
 			/* Always let a player join. */
 			if (! (event.getEntity() instanceof Player)) {
 				event.setCancelled(true);

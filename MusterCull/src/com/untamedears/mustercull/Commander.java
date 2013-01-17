@@ -92,6 +92,11 @@ public class Commander implements CommandExecutor {
 			CullType cullType = null;
 			
 			if (argv.length >= 2) {
+                if (argv[1].equalsIgnoreCase("hard_cap_laborer")) {
+                    this.pluginInstance.pauseCulling(GlobalCullType.HARDCAP);
+			    	sender.sendMessage("MusterCull: culling paused for hard cap laborer, if it wasn't already.");
+                    return true;
+                }
 				cullType = CullType.fromName(argv[1]);
 				
 				if (cullType == null) {
@@ -114,6 +119,11 @@ public class Commander implements CommandExecutor {
 			CullType cullType = null;
 			
 			if (argv.length >= 2) {
+                if (argv[1].equalsIgnoreCase("hard_cap_laborer")) {
+                    pluginInstance.resumeCulling(GlobalCullType.HARDCAP);
+                    sender.sendMessage("MusterCull: culling paused for hard cap laborer, if it wasn't already.");
+                    return true;
+                }
 				cullType = CullType.fromName(argv[1]);
 				
 				if (cullType == null) {
@@ -344,9 +354,7 @@ public class Commander implements CommandExecutor {
 			sender.sendMessage("MusterCull: invalid hard limit variable: " + limit + " (use maxmob or pmulti)");
 			return true;
 		}
-		
-		sender.sendMessage("mobcount" + String.valueOf(this.pluginInstance.getMobs().size()));
-		
+
 		return true;
 	}
 	
