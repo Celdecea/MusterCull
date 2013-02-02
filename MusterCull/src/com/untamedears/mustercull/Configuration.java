@@ -62,14 +62,19 @@ public class Configuration {
 	private int damageChance = 75;
 	
 	/**
-	 * Hard number of limit on mobs before the damage laborer cares to run.
+	 * Hard number on mobs before the damage laborer cares to run.
 	 */
-	private int mobLimit = 500;
+	private int mobLimit = 1;
 	
 	/**
 	 * Percentage of mobLimit each mob must be to trigger damage culling
 	 */
-	private int mobLimitPercent = 20;
+	private int mobLimitPercent = 1;
+	
+	/**
+	 * Whether or not to notify when entities have been damaged.
+	 */
+	private boolean damageNotify = false;
 	
 	/**
 	 * The hard mob limit. Also however many mobs can exist with no players.
@@ -112,6 +117,7 @@ public class Configuration {
 		this.setTicksBetweenDamage(config.getInt("ticks_between_damage"));
 		this.setMobLimit(config.getInt("mob_limit"));
 		this.setMobLimitPercent(config.getInt("mob_limit_percent"));
+		this.setDamageNotify(config.getBoolean("damage_notify"));
 		this.setMaxMob(config.getInt("mob_max_mob"));
 		this.setPlayerMultiplier(config.getInt("mob_player_multiplier"));
         this.setTicksBetweenHardCap(config.getInt("ticks_between_hard_cap"));
@@ -124,7 +130,7 @@ public class Configuration {
 			for (Object obj : list ) {
 	
 				if (obj == null) {
-					System.err.println("Possible bad limit in configuration file.");
+					this.pluginInstance.getLogger().warning("Possible bad limit in configuration file.");
 					continue;
 				}
 				
@@ -135,7 +141,7 @@ public class Configuration {
 	            EntityType type = EntityType.fromName(map.get("type").toString().trim());
 
 	            if (type == null) {
-            		System.err.println("Unrecognized type '" + map.get("type").toString() + "' in configuration file.");
+	            	this.pluginInstance.getLogger().warning("Unrecognized type '" + map.get("type").toString() + "' in configuration file.");
 					continue;
 	            }
 
@@ -144,7 +150,7 @@ public class Configuration {
 	            CullType culling = CullType.fromName(map.get("culling").toString());
 
 	            if (culling == null) {
-            		System.err.println("Unrecognized culling '" + map.get("culling").toString() + "' in configuration file.");
+	            	this.pluginInstance.getLogger().warning("Unrecognized culling '" + map.get("culling").toString() + "' in configuration file.");
 					continue;
 	            }
 	            
@@ -175,6 +181,7 @@ public class Configuration {
 		config.set("ticks_between_damage", this.ticksBetweenDamage);
 		config.set("mob_limit", this.mobLimit);
 		config.set("mob_limit_percent", this.mobLimitPercent);
+		config.set("damage_notify", this.damageNotify);
 		config.set("mob_max_mob", this.maxMob);
 		config.set("mob_player_multiplier", this.playerMultiplier);
         config.set("ticks_between_hard_cap", this.ticksBetweenHardCap);
@@ -477,5 +484,22 @@ public class Configuration {
         ticksBetweenHardCap = ticksBetween;
         dirty = true;
     }
+
+	/**
+	 * Gets whether to notify when an entity is damaged by this plugin.
+	 */
+	public boolean getDamageNotify() {
+		return this.damageNotify;
+	}
 	
+	/**
+	 * Sets whether to notify when an entity is damaged by this plugin.
+	 * @param damageNotify Whether to notify when an entity is damaged by this plugin.
+	 */
+	public void setDamageNotify(boolean damageNotify) {
+		
+		this.damageNotify = damageNotify;
+		this.dirty = true;
+	}
+		
 }

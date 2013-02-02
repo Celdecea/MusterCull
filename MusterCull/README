@@ -1,9 +1,9 @@
 
-MusterCull v1.3 - A Bukkit plugin and Minecraft mob limiter.
+MusterCull v1.3.3 - A Bukkit plugin and Minecraft mob limiter.
 
 By Celdecea
 
-Download: http://www.mediafire.com/file/g5l8gxt6e90a7ks/MusterCull-1.3.jar
+http://www.mediafire.com/file/ds8ky4fb1phsc9b/MusterCull-1.3.3.jar
 Source: https://github.com/Celdecea/MusterCull
 
 WARNING:
@@ -31,6 +31,7 @@ Add the following (you don't need START and END lines):
 damage: 2
 damage_chance: 70
 ticks_per_damage: 20
+damage_count: 1
 #limits:
 #- type: CREEPER
 #  culling: SPAWN
@@ -64,6 +65,11 @@ ticks_between_damage:  The amount of ticks to delay between calls to the mob
 
 damage_count:  The number of entities to damage each time the damage laborer
                is ran.
+
+mob_limit: The number of entities before the damage laborer cares to run.
+
+mob_limit_percent: Percent of total entities a mob must be to be queued for
+                   damage.
 
 Limit fields:
 
@@ -100,6 +106,9 @@ limit:    The hard number of mobs of this type to limit in a certain area. If
 range:    The distance from the mob to check. If this value is zero or less,
           no checking is performed and cycles are wasted, so comment out
           unused limits from this file.
+          
+          This is a bounding box range, so 5 would be 10x10x10 cube around a
+          player.
 
 COMMANDS:
 
@@ -128,3 +137,5 @@ them off.
 
 Keep ticks_between_damage a minimum and multiple of the server average tick
 rate (like 20). Keep damage_count low (1 or 2 and no more than 5).
+
+

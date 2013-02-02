@@ -110,10 +110,13 @@ damage: 6
 damage_chance: 75
 
 # The number of ticks between invocations of the damage method for mobs.
-ticks_between_damage: 10
+ticks_between_damage: 20
 
 # The number of entities to damage each round of the laborer.
 damage_count: 1
+
+# Whether to print a message when mobs are damaged. 
+damage_notify: false
 
 # The maximum number of living entities allowed to be loaded.
 mob_max_mob: 10000
@@ -125,3 +128,8 @@ mob_player_multiplier: 5
 # The number of ticks between invocations of the hardcap laborer for mobs.
 ticks_between_hard_cap: 40
 
+# Number of entities before the damage laborer cares to run.
+mob_limit: 1
+
+# Percent of total entities a mob must be to be queued for damage.
+mob_limit_percent: 1

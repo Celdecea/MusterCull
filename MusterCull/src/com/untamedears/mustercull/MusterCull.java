@@ -473,16 +473,16 @@ public class MusterCull extends JavaPlugin {
 			Ageable agingEntity = (Ageable)entity;
 			
 			if (agingEntity.isAdult()) {
-				getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + damage + " point(s).");
+				NotifyDamaged(entity, damage);
 				agingEntity.damage(damage);
 			}
 			else {
-				getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + (2 * damage) + " point(s).");
+				NotifyDamaged(entity, 2 * damage);
 				agingEntity.damage(2 * damage);
 			}
 		}
 		else if (LivingEntity.class.isAssignableFrom(entity.getClass())) {
-			getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + damage + " point(s).");
+			NotifyDamaged(entity, damage);
 			LivingEntity livingEntity = (LivingEntity)entity;
 			livingEntity.damage(damage);
 		}
@@ -492,7 +492,16 @@ public class MusterCull extends JavaPlugin {
 		
 	}
 	
-	
+	/**
+	 * Notifies the console that an entity has been damaged, if enabled
+	 * @param entity The entity to report on.
+	 * @param entity The amount of damage to report
+	 */
+	public void NotifyDamaged(Entity entity, int damage) {
+		if (this.config.getDamageNotify()) {
+			getLogger().info("Damaging " + entity.toString() + " at " + entity.getLocation().toString() + " with " + damage + " point(s).");
+		}
+	}
 	
 	/**
 	 * Performs configured culling operations on the given entity.
