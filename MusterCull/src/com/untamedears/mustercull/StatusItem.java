@@ -1,9 +1,9 @@
 package com.untamedears.mustercull;
 
-import java.util.List;
-
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
+
+import java.util.List;
 
 /**
  * Stores information about players and surrounding mobs for status checks.
