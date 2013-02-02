@@ -1,8 +1,8 @@
 package com.untamedears.mustercull;
 
-import java.util.Random;
-
 import org.bukkit.entity.Entity;
+
+import java.util.Random;
 
 /**
  * This class performs damage to mobs using the DAMAGE CullType.

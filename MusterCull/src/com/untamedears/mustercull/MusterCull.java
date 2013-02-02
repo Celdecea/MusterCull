@@ -1,21 +1,10 @@
 package com.untamedears.mustercull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-
 import org.bukkit.World;
-import org.bukkit.entity.Ageable;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.*;
 
 /**
  * This is the main class for the MusterCull Bukkit plug-in.
@@ -48,8 +37,13 @@ public class MusterCull extends JavaPlugin {
 	 * Buffer for keeping track of the parallel Laborer task for the DAMAGE method.
 	 */
 	private int damageLaborTask = -1;
-	
-	/**
+
+    /**
+     * Buffer for keeping track of the parallel Laborer task for the HARDCAP method.
+     */
+    private int hardCapLaborTask = -1;
+
+    /**
 	 * Buffer for holding configuration information for this plug-in.
 	 */
 	private Configuration config = null;
@@ -58,6 +52,11 @@ public class MusterCull extends JavaPlugin {
 	 * Stores any paused culling types we may have.
 	 */
 	private Set<CullType> pausedCullTypes = new HashSet<CullType>();
+
+    /**
+     * Whether hard cap laborer is paused.
+     */
+    private boolean hardCapPaused = false;
 	
 	/**
 	 * Called when the plug-in is enabled by Bukkit.
@@ -71,9 +70,15 @@ public class MusterCull extends JavaPlugin {
 
 		if (this.damageLaborTask == -1) {
 			getLogger().severe("Failed to start MusterCull DAMAGE laborer.");
-		}	
-		
-		getServer().getPluginManager().registerEvents(new EntityListener(this), this);
+		}
+
+        this.hardCapLaborTask = getServer().getScheduler().scheduleSyncRepeatingTask(this, new HardCapLaborer(this), config.getTicksBetweenHardCap(), config.getTicksBetweenHardCap());
+
+        if (this.hardCapLaborTask == -1) {
+            getLogger().severe("Failed to start MusterCull HARDCAP laborer.");
+        }
+
+        getServer().getPluginManager().registerEvents(new EntityListener(this), this);
 		Commander commander = new Commander(this);
 		
 		for (String command : getDescription().getCommands().keySet()) {
@@ -88,6 +93,10 @@ public class MusterCull extends JavaPlugin {
     	if (this.damageLaborTask != -1) {
     		getServer().getScheduler().cancelTask(this.damageLaborTask);
     	}
+
+        if (this.hardCapLaborTask != -1) {
+            getServer().getScheduler().cancelTask(hardCapLaborTask);
+        }
 
     	this.config.save();
     }
@@ -141,10 +150,89 @@ public class MusterCull extends JavaPlugin {
 		return this.config.hasSpawnLimits();
 	}
 	
+	/**
+	 * Returns the hard mob limit.
+	 * @return The hard mob limit. 
+	 */
+	public int getMaxMob() {
+		return this.config.getMaxMob();
+	}
 	
+	/**
+	 * Sets the hard mob limit.
+	 * @param limit the hard mob limit.
+	 */
+	public void setMaxMob(int limit) {
+		this.config.setMaxMob(limit);
+	}
 	
+	/**
+	 * Returns how many mobs permitted less of the maximum, per player.
+	 * @return How many mobs permitted less of the maximum, per player.
+	 */
+	public int getPlayerMultiplier() {
+		return this.config.getPlayerMultiplier();
+	}
 	
+	/**
+	 * Sets the player multiplier for the hard mob limit.
+	 * @param value the player multiplier for the hard mob limit.
+	 */
+	public void setPlayerMultiplier(int value) {
+		this.config.setPlayerMultiplier(value);
+	}
+
+	/**
+	 * Returns how much current mob count is over mob limit.
+	 * @return how much current mob count is over mob limit.
+	 */
+	public int overHardMobLimit() {
+
+        int playerCount = getServer().getOnlinePlayers().length;
+		int hardLimit = getMaxMob();
+		int lessHardLimit = getPlayerMultiplier() * playerCount;
+		int currentLimit = hardLimit - lessHardLimit;
+		int totalMobs = getMobCount() - playerCount;
+		
+		return totalMobs - currentLimit;
+	}
 	
+	/**
+	 * Returns list of all living entities in all worlds.
+	 * @return list of all living entities in all worlds.
+	 */
+	public List<LivingEntity> getAllMobs() {
+
+        List<World> worlds = getServer().getWorlds();
+        int mobCount = 0;
+
+		for (World world : worlds) {
+            mobCount += world.getLivingEntities().size();
+		}
+
+        List<LivingEntity> entities = new ArrayList<LivingEntity>(mobCount);
+
+        for (World world : worlds) {
+            entities.addAll(world.getLivingEntities());
+        }
+
+        return entities;
+	}
+
+    /**
+     * Returns number of living entities in all worlds.
+     * @return number of living entities in all worlds.
+     */
+    public int getMobCount() {
+
+        int count = 0;
+
+        for (World world : getServer().getWorlds()) {
+            count += world.getLivingEntities().size();
+        }
+
+        return count;
+    }
 	
 	/**
 	 * Returns the next entity for monitoring.
@@ -461,6 +549,8 @@ public class MusterCull extends JavaPlugin {
 				this.pausedCullTypes.add(cullType);
 			}
 		}
+
+        hardCapPaused = true;
 	}
 	
 	/**
@@ -471,6 +561,8 @@ public class MusterCull extends JavaPlugin {
 		synchronized(this.pausedCullTypes) {
 			this.pausedCullTypes.clear();
 		}
+
+        hardCapPaused = false;
 	}
 	
 	/**
@@ -483,6 +575,11 @@ public class MusterCull extends JavaPlugin {
 			this.pausedCullTypes.add(cullType);
 		}
 	}
+
+    public void pauseCulling(GlobalCullType cullType) {
+        getLogger().info("Pausing culling type " + cullType.toString() + "...");
+        hardCapPaused = true;
+    }
 	
 	/**
 	 * Resumes a specific CullType which was paused.
@@ -494,7 +591,12 @@ public class MusterCull extends JavaPlugin {
 			this.pausedCullTypes.remove(cullType);
 		}
 	}
-	
+
+    public void resumeCulling(GlobalCullType cullType) {
+        getLogger().info("Resuming culling type " + cullType + "...");
+        hardCapPaused = false;
+    }
+
 	/**
 	 * Returns whether or not a CullType is paused.
 	 * @param cullType The CullType to test the status of.
@@ -505,6 +607,11 @@ public class MusterCull extends JavaPlugin {
 			return this.pausedCullTypes.contains(cullType);
 		}
 	}
+
+    public boolean isPaused(GlobalCullType cullType) {
+        return hardCapPaused;
+
+    }
 	
 	/**
 	 * Forces the local configuration file to save.

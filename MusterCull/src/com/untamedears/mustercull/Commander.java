@@ -59,6 +59,9 @@ public class Commander implements CommandExecutor {
 		else if (caption.equals("mculllimit")) {
 			return commandLimit(sender, argv);
 		}
+		else if (caption.equals("mcullhardlimit")) {
+			return commandHardLimit(sender, argv);
+		}
 		else if (caption.equals("mcullentities")) {
 			return commandEntities(sender, argv);
 		}
@@ -89,6 +92,11 @@ public class Commander implements CommandExecutor {
 			CullType cullType = null;
 			
 			if (argv.length >= 2) {
+                if (argv[1].equalsIgnoreCase("hard_cap_laborer")) {
+                    this.pluginInstance.pauseCulling(GlobalCullType.HARDCAP);
+			    	sender.sendMessage("MusterCull: culling paused for hard cap laborer, if it wasn't already.");
+                    return true;
+                }
 				cullType = CullType.fromName(argv[1]);
 				
 				if (cullType == null) {
@@ -111,6 +119,11 @@ public class Commander implements CommandExecutor {
 			CullType cullType = null;
 			
 			if (argv.length >= 2) {
+                if (argv[1].equalsIgnoreCase("hard_cap_laborer")) {
+                    pluginInstance.resumeCulling(GlobalCullType.HARDCAP);
+                    sender.sendMessage("MusterCull: culling paused for hard cap laborer, if it wasn't already.");
+                    return true;
+                }
 				cullType = CullType.fromName(argv[1]);
 				
 				if (cullType == null) {
@@ -304,6 +317,46 @@ public class Commander implements CommandExecutor {
 		return true;
 	}
 	
+	/**
+	 * Command handler which manipulates the hard mob limit.
+	 * @param sender A reference to a Bukkit CommandSender for this handler.
+	 * @param argv A list of arguments for this handler.
+	 * @return Whether or not this event was handled and should be canceled.
+	 */
+	public boolean commandHardLimit(CommandSender sender, String[] argv) {
+		
+		if (argv.length < 2) {
+			return false;
+		}
+		
+		String limit = argv[0];
+		int value = 0;
+		try {
+			value = Integer.parseInt(argv[1]);
+		}
+		catch (NumberFormatException e) {
+			sender.sendMessage("MusterCull: parameter must be a number, you entered: " + argv[1]);
+			return true;
+		}
+		
+		if (value < 0) {
+			sender.sendMessage("MusterCull: value must be greater than or equal to zero.");
+			return true;
+		}
+		
+		if (limit.compareToIgnoreCase("maxmob") == 0) {
+			this.pluginInstance.setMaxMob(value);
+		}
+		else if (limit.compareToIgnoreCase("pmulti") == 0) {
+			this.pluginInstance.setPlayerMultiplier(value);
+		}
+		else {
+			sender.sendMessage("MusterCull: invalid hard limit variable: " + limit + " (use maxmob or pmulti)");
+			return true;
+		}
+
+		return true;
+	}
 	
 	/**
 	 * Command handler which returns a list of Bukkit entities. 

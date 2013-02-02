@@ -118,6 +118,16 @@ damage_count: 1
 # Whether to print a message when mobs are damaged. 
 damage_notify: false
 
+# The maximum number of living entities allowed to be loaded.
+mob_max_mob: 10000
+
+# mob_player_multiplier is multiplied by the number of online players.
+# This number of how much smaller the mob cap is than mob_max_mob.
+mob_player_multiplier: 5
+
+# The number of ticks between invocations of the hardcap laborer for mobs.
+ticks_between_hard_cap: 40
+
 # Number of entities before the damage laborer cares to run.
 mob_limit: 1
 
